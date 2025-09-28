@@ -6,22 +6,48 @@
 #include "GameFramework/GameUserSettings.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/AudioComponent.h"
+#include "Sound/SoundBase.h"
 
 void UComicConGameInstance::Init()
 {
     Super::Init();
-    if (!GEngine) return;
-    if (UGameUserSettings* GS = GEngine->GetGameUserSettings())
-    {
-        GS->SetFullscreenMode(EWindowMode::Windowed);
-        GS->SetScreenResolution(FIntPoint(450, 800));
-        GS->ApplySettings(false);
-        GS->SaveSettings();
-    }
 
-    if (BGM)
+    if (GEngine)
     {
-        PersistentAudio = UGameplayStatics::CreateSound2D(this, BGM, 1.0f, 1.0f, 0.0f, nullptr, true);
+        if (UGameUserSettings* GS = GEngine->GetGameUserSettings())
+        {
+            GS->SetFullscreenMode(EWindowMode::Windowed);
+            GS->SetScreenResolution(FIntPoint(450, 800));
+            GS->ApplySettings(false);
+            GS->SaveSettings();
+        }
+    }
+}
+
+void UComicConGameInstance::OnStart()
+{
+    Super::OnStart();
+    StartBGM();
+}
+
+void UComicConGameInstance::StartBGM()
+{
+    if (!BGM) return;
+
+    UWorld* World = GetWorld();
+    if (!World) return;
+
+    // CreateSound2D(WorldContext, Sound, Vol, Pitch, StartTime, Concurrency, bPersistAcrossLevelTransition, bAutoDestroy)
+    PersistentAudio = UGameplayStatics::CreateSound2D(
+        World, BGM, 1.f, 1.f, 0.f, nullptr,
+        /*bPersistAcrossLevelTransition=*/true,
+        /*bAutoDestroy=*/false
+    );
+
+    if (PersistentAudio)
+    {
+        PersistentAudio->bIsUISound = true;        // 2D BGM면 공간화 끄기
+        PersistentAudio->bAllowSpatialization = false;
         PersistentAudio->Play();
     }
 }

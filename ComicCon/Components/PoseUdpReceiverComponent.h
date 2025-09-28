@@ -80,4 +80,9 @@ public:
 
     FOnHandBufferChanged OnHandBufferChanged;
 
+// Debug Section
+public:
+    UPROPERTY(EditAnywhere, Category = "Debug")
+	uint8 bDrawDebug : 1 = false;
+
 };

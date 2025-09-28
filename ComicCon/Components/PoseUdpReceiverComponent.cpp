@@ -45,64 +45,68 @@ void UPoseUdpReceiverComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 
     const FTransform& OwnerXform = GetOwner()->GetActorTransform();
 
-    // === 바디 디버그 드로잉 =================================
-    for (const FPersonPose& Pose : LatestPoses)
+    if (bDrawDebug)
     {
-        if (Pose.XY.Num() < 17) continue;
-
-        // 라인 스켈레톤
-        for (int32 e = 0; e < MotionCapture::NUM_EDGES; ++e)
+        // === 바디 디버그 드로잉 =================================
+        for (const FPersonPose& Pose : LatestPoses)
         {
-            const int32 A = MotionCapture::EDGES[e][0];
-            const int32 B = MotionCapture::EDGES[e][1];
-            if (!Pose.XY.IsValidIndex(A) || !Pose.XY.IsValidIndex(B)) continue;
+            if (Pose.XY.Num() < 17) continue;
 
-            const FVector2f& Pa2D = Pose.XY[A];
-            const FVector2f& Pb2D = Pose.XY[B];
-            if (!(UMathLibraries::IsFinite2D(Pa2D) && UMathLibraries::IsFinite2D(Pb2D))) continue;
+            // 라인 스켈레톤
+            for (int32 e = 0; e < MotionCapture::NUM_EDGES; ++e)
+            {
+                const int32 A = MotionCapture::EDGES[e][0];
+                const int32 B = MotionCapture::EDGES[e][1];
+                if (!Pose.XY.IsValidIndex(A) || !Pose.XY.IsValidIndex(B)) continue;
 
-            const FVector Wa = SampleToWorld(Pa2D);
-            const FVector Wb = SampleToWorld(Pb2D);
+                const FVector2f& Pa2D = Pose.XY[A];
+                const FVector2f& Pb2D = Pose.XY[B];
+                if (!(UMathLibraries::IsFinite2D(Pa2D) && UMathLibraries::IsFinite2D(Pb2D))) continue;
 
-            // DrawDebugLine(GetWorld(), Wa, Wb, LineColor, false, 0.f, 0, LineThickness);
+                const FVector Wa = SampleToWorld(Pa2D);
+                const FVector Wb = SampleToWorld(Pb2D);
+
+                DrawDebugLine(GetWorld(), Wa, Wb, LineColor, false, 0.f, 0, LineThickness);
+            }
+
+            // 포인트
+            for (int32 k = 0; k < 17; ++k)
+            {
+                const FVector2f& P2D = Pose.XY[k];
+                if (!UMathLibraries::IsFinite2D(P2D)) continue;
+
+                const FVector Wp = SampleToWorld(P2D);
+                DrawDebugSphere(GetWorld(), Wp, PointRadius, 8, PointColor, false, 0.f, 0, 0.5f);
+            }
         }
 
-        // 포인트
-        for (int32 k = 0; k < 17; ++k)
+        // === 손 디버그 드로잉 ===================================
+        for (const FHandPose& H : LatestHands)
         {
-            const FVector2f& P2D = Pose.XY[k];
-            if (!UMathLibraries::IsFinite2D(P2D)) continue;
 
-            const FVector Wp = SampleToWorld(P2D);
-            // DrawDebugSphere(GetWorld(), Wp, PointRadius, 8, PointColor, false, 0.f, 0, 0.5f);
+            for (int32 k = 0; k < H.XY.Num(); ++k)
+            {
+                const FVector2f& P2D = H.XY[k];
+                if (!UMathLibraries::IsFinite2D(P2D)) continue;
+
+                const FVector Wp = SampleToWorld(P2D);
+
+                const FColor C =
+                    (H.Which == 0) ? FColor(0, 200, 255) :
+                    (H.Which == 1) ? FColor(255, 200, 0) :
+                    FColor(200, 200, 200);
+
+                DrawDebugSphere(GetWorld(), Wp, PointRadius, 8, C, false, 0.f, 0, 0.5f);
+            }
+
+            if (UMathLibraries::IsFinite2D(H.Center))
+            {
+                const FVector Wc = SampleToWorld(H.Center);
+                DrawDebugSphere(GetWorld(), Wc, PointRadius * 1.5f, 10, FColor::Cyan, false, 0.f, 0, 0.8f);
+            }
         }
     }
-
-    // === 손 디버그 드로잉 ===================================
-    for (const FHandPose& H : LatestHands)
-    {
-
-        for (int32 k = 0; k < H.XY.Num(); ++k)
-        {
-            const FVector2f& P2D = H.XY[k];
-            if (!UMathLibraries::IsFinite2D(P2D)) continue;
-
-            const FVector Wp = SampleToWorld(P2D);
-
-            const FColor C =
-                (H.Which == 0) ? FColor(0, 200, 255) :
-                (H.Which == 1) ? FColor(255, 200, 0) :
-                FColor(200, 200, 200);
-
-            DrawDebugSphere(GetWorld(), Wp, PointRadius, 8, C, false, 0.f, 0, 0.5f);
-        }
-
-        if (UMathLibraries::IsFinite2D(H.Center))
-        {
-            const FVector Wc = SampleToWorld(H.Center);
-            DrawDebugSphere(GetWorld(), Wc, PointRadius * 1.5f, 10, FColor::Cyan, false, 0.f, 0, 0.8f);
-        }
-    }
+    
 
     // === 브로드캐스트(리스너가 동일 원점으로 해석하도록 전달) =========
     const FTransform& OwnerXformFinal = OwnerXform;

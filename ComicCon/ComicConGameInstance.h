@@ -12,15 +12,17 @@
 UCLASS()
 class COMICCON_API UComicConGameInstance : public UGameInstance
 {
-	GENERATED_BODY()
-	
-protected:
-	virtual void Init() override;
-
+    GENERATED_BODY()
 public:
-	UPROPERTY()
-	UAudioComponent* PersistentAudio;
+    virtual void Init() override;
+    virtual void OnStart() override; // 첫 맵 로드 후 호출
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
-	USoundBase* BGM;
+private:
+    void StartBGM();
+
+    UPROPERTY()
+    UAudioComponent* PersistentAudio = nullptr;
+
+    UPROPERTY(EditDefaultsOnly)
+    USoundBase* BGM = nullptr;
 };

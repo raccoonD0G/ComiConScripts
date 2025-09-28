@@ -66,11 +66,11 @@ void AViewPlayer::BeginPlay()
 
     // --- WebcamReceiver  (⺻ * ViewScale) ---
     {
-        const FRotator WebcamRot(0.0f, 90.0f, 90.0f);
+        const FRotator WebcamRot(0.0f, 0.0f, 0.0f);
         const FVector WebcamLoc(0, 0, -100);
 
         const FVector WebcamBaseScale(
-            static_cast<float>(VideoFrameSize.X) * 0.01f,
+            static_cast<float>(VideoFrameSize.X) * 0.005f,
             static_cast<float>(VideoFrameSize.Y) * 0.01f,
             1.0f);
         const FVector WebcamScale = WebcamBaseScale * ViewScale;
