@@ -48,7 +48,7 @@ void UCameraBoundsClampComponent::ClampNow()
     float LocalHorizontalMargin = 0.0f;
     if (UCameraComponent* CameraComponent = ResolveCameraComponent())
     {
-        const FVector CameraWorld = SpringArm->GetSocketLocation();
+        const FVector CameraWorld = SpringArm->GetSocketLocation(USpringArmComponent::SocketName);
         const float DistanceToPivot = FVector::Dist(CameraWorld, PivotWorld);
 
         if (CameraComponent->ProjectionMode == ECameraProjectionMode::Orthographic)
