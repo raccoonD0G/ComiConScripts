@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -7,21 +5,22 @@
 #include "Interfaces/ClampVolumeInterface.h"
 #include "WebcamReceiver.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class COMICCON_API AWebcamReceiver : public ANDIReceiveActor, public IClampVolumeInterface
 {
-	GENERATED_BODY()
+        GENERATED_BODY()
 
 public:
-	AWebcamReceiver();
+        AWebcamReceiver();
 
-	virtual class UBoxComponent* GetClampVolume() const override;
+        virtual void OnConstruction(const FTransform& Transform) override;
+        virtual void PostInitializeComponents() override;
+
+        virtual class UBoxComponent* GetClampVolume() const override;
 
 private:
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, meta = (AllowPrivateAccess = true))
-	TObjectPtr<class UBoxComponent> ClampVolume = nullptr;
-	
+        void UpdateClampVolumeBounds();
+
+        UPROPERTY(BlueprintReadWrite, VisibleAnywhere, meta = (AllowPrivateAccess = true))
+        TObjectPtr<class UBoxComponent> ClampVolume = nullptr;
 };
