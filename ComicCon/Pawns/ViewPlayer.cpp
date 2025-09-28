@@ -7,7 +7,6 @@
 #include "Actors/Amulet.h"
 #include "MediaPlate.h"
 #include "Actors/WebcamReceiver.h"
-#include "Components/PoseUdpReceiverComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Components/CameraBoundsClampComponent.h"
 #include "Components/AudioComponent.h"
@@ -49,30 +48,19 @@ void AViewPlayer::BeginPlay()
     check(AmuletClass);
     check(WebcamReceiverClass);
 
-    // --- MirroredPlayer  ( ) ---
+    // --- MirroredPlayer ½ºÆù (½ºÄÉÀÏ Àû¿ë) ---
     {
         const FVector MirroredScale(ViewScale);
         FTransform MirroredPlayerTF = FTransform(FRotator(), FVector(0, 0, -100), MirroredScale);
         MirroredPlayer = GetWorld()->SpawnActor<AMirroredPlayer>(MirroredPlayerClass, MirroredPlayerTF, Params);
-
-        if (MirroredPlayer)
-        {
-            if (UPoseUdpReceiverComponent* PoseReceiver = MirroredPlayer->GetPoseReceiver())
-            {
-                PoseReceiver->SetFrameSize(VideoFrameSize);
-            }
-        }
     }
 
-    // --- WebcamReceiver  (âº» * ViewScale) ---
+    // --- WebcamReceiver ½ºÆù (±âº»°ª * ViewScale) ---
     {
         const FRotator WebcamRot(0.0f, 0.0f, 0.0f);
         const FVector WebcamLoc(0, 0, -100);
 
-        const FVector WebcamBaseScale(
-            static_cast<float>(VideoFrameSize.X) * 0.005f,
-            static_cast<float>(VideoFrameSize.Y) * 0.01f,
-            1.0f);
+        const FVector WebcamBaseScale(10.8f * 0.5625f, 19.2f, 1.0f);
         const FVector WebcamScale = WebcamBaseScale * ViewScale;
 
         FTransform WebcamReceiverTF(WebcamRot, WebcamLoc, WebcamScale);
@@ -85,14 +73,9 @@ void AViewPlayer::BeginPlay()
 
         WebcamReceiver->FinishSpawning(WebcamReceiverTF);
         WebcamReceiver->SetActorTransform(WebcamReceiverTF, false, nullptr, ETeleportType::ResetPhysics);
-
-        if (AWebcamReceiver* Webcam = Cast<AWebcamReceiver>(WebcamReceiver))
-        {
-            Webcam->UpdateClampVolume(VideoFrameSize);
-        }
     }
 
-    // --- (Amulet)  ×´ ---
+    // --- ºÎÀû(Amulet)Àº ±âÁ¸ ±×´ë·Î ---
     {
         FTransform AmuletTF;
         AmuletLeft = GetWorld()->SpawnActorDeferred<AAmulet>(AmuletClass, AmuletTF);
@@ -160,7 +143,7 @@ void AViewPlayer::ShowDamagedEffect()
 
     const FVector Offset(NiagaraXOffset, 0.f, 0.f);
 
-    // Å¹  Æ®  (Úµ Ä±)
+    // ¸Å¹ø »õ ÄÄÆ÷³ÍÆ® »ý¼º (ÀÚµ¿ ÆÄ±«)
     UNiagaraComponent* Comp = UNiagaraFunctionLibrary::SpawnSystemAttached(
         DamagedEffect,
         SpringArmComponent,

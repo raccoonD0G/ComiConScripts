@@ -26,9 +26,6 @@ private:
     UPROPERTY(EditAnywhere, Category = "View|Scale", meta = (ClampMin = "0.01", UIMin = "0.1", UIMax = "5.0"))
     float ViewScale = 1.0f;
 
-    UPROPERTY(EditAnywhere, Category = "View|Media", meta = (ClampMin = "1", UIMin = "1"))
-    FIntPoint VideoFrameSize = FIntPoint(1080, 1920);
-
 // Component Section
 public:
     FORCEINLINE class USpringArmComponent* GetSpringArmComponent() const { return SpringArmComponent; }
@@ -102,7 +99,7 @@ private:
 private:
 
     UPROPERTY(EditAnywhere, Category = "Camera")
-    TSubclassOf<class UCameraShakeBase> HitShakeClass; // BP_HitShake าด
+    TSubclassOf<class UCameraShakeBase> HitShakeClass; // BP_HitShake วาด็
 
     void PlayHitShake();
 };

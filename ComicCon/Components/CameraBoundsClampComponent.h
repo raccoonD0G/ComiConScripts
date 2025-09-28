@@ -6,8 +6,6 @@
 #include "Components/ActorComponent.h"
 #include "CameraBoundsClampComponent.generated.h"
 
-class UCameraComponent;
-
 UENUM(BlueprintType)
 enum class ECamera2DMode : uint8
 {
@@ -44,10 +42,5 @@ private:
     /** 타겟 스프링암 */
     UPROPERTY(EditAnywhere, Category = "Clamp")
     TObjectPtr<USpringArmComponent> SpringArm = nullptr;
-
-    /** 스프링암과 연결된 카메라 (필요 시 동적 검색) */
-    TWeakObjectPtr<UCameraComponent> CachedCameraComponent;
-
-    UCameraComponent* ResolveCameraComponent();
-
+		
 };
