@@ -1,8 +1,8 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "Actors/WebcamReceiver.h"
+
+#include "Components/ActorComponent.h"
 #include "Components/BoxComponent.h"
+#include "Components/PrimitiveComponent.h"
 
 AWebcamReceiver::AWebcamReceiver()
 {
@@ -10,10 +10,7 @@ AWebcamReceiver::AWebcamReceiver()
 
         ClampVolume = CreateDefaultSubobject<UBoxComponent>(TEXT("ClampVolume"));
         ClampVolume->SetupAttachment(RootComponent);
-        ClampVolume->SetBoxExtent(FVector(92.0f, 100.0f, 540.0f));
         ClampVolume->SetCollisionProfileName(TEXT("NoCollision"));
-
-        DefaultClampExtent = ClampVolume->GetUnscaledBoxExtent();
 }
 
 UBoxComponent* AWebcamReceiver::GetClampVolume() const
@@ -21,34 +18,49 @@ UBoxComponent* AWebcamReceiver::GetClampVolume() const
         return ClampVolume;
 }
 
-void AWebcamReceiver::UpdateClampVolume(const FIntPoint& FrameSize)
+void AWebcamReceiver::OnConstruction(const FTransform& Transform)
+{
+        Super::OnConstruction(Transform);
+        UpdateClampVolumeBounds();
+}
+
+void AWebcamReceiver::PostInitializeComponents()
+{
+        Super::PostInitializeComponents();
+        UpdateClampVolumeBounds();
+}
+
+void AWebcamReceiver::UpdateClampVolumeBounds()
 {
         if (!ClampVolume)
         {
                 return;
         }
 
-        if (DefaultClampExtent.IsNearlyZero())
+        const FTransform WorldToActor = GetActorTransform().Inverse();
+        FBox CombinedBounds(EForceInit::ForceInit);
+
+        TInlineComponentArray<UPrimitiveComponent*> PrimitiveComponents(this);
+        for (UPrimitiveComponent* Primitive : PrimitiveComponents)
         {
-                DefaultClampExtent = ClampVolume->GetUnscaledBoxExtent();
+                if (!Primitive || Primitive == ClampVolume || !Primitive->IsRegistered())
+                {
+                        continue;
+                }
+
+                const FBoxSphereBounds WorldBounds = Primitive->CalcBounds(Primitive->GetComponentTransform());
+                const FBoxSphereBounds ActorBounds = WorldBounds.TransformBy(WorldToActor);
+                const FBox BoundsBox = ActorBounds.GetBox();
+
+                if (BoundsBox.IsValid)
+                {
+                        CombinedBounds += BoundsBox;
+                }
         }
 
-        const int32 SafeWidth = FMath::Max(FrameSize.X, 1);
-        const int32 SafeHeight = FMath::Max(FrameSize.Y, 1);
-        const int32 RefWidth = FMath::Max(ReferenceFrameSize.X, 1);
-        const int32 RefHeight = FMath::Max(ReferenceFrameSize.Y, 1);
-
-        FVector NewExtent = DefaultClampExtent;
-
-        // Maintain aspect by scaling horizontal extent with incoming frame width
-        // and vertical extent with incoming frame height, using the reference
-        // frame as the baseline that was authored in the editor.
-        const float WidthScale = (static_cast<float>(SafeWidth) / static_cast<float>(RefWidth)) *
-                (static_cast<float>(RefHeight) / static_cast<float>(SafeHeight));
-        const float HeightScale = static_cast<float>(SafeHeight) / static_cast<float>(RefHeight);
-
-        NewExtent.Y = DefaultClampExtent.Y * WidthScale;
-        NewExtent.Z = DefaultClampExtent.Z * HeightScale;
-
-        ClampVolume->SetBoxExtent(NewExtent);
+        if (CombinedBounds.IsValid)
+        {
+                ClampVolume->SetRelativeLocation(CombinedBounds.GetCenter());
+                ClampVolume->SetBoxExtent(CombinedBounds.GetExtent());
+        }
 }
