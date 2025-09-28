@@ -1,0 +1,8 @@
+{
+	"RemapUnityFiles": 
+	{
+		"Module.NDIIOShaders.cpp.obj": [
+			"NDIShaders.cpp.obj"
+		]
+	}
+}

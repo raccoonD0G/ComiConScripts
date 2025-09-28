@@ -1,0 +1,18 @@
+{
+	"RemapUnityFiles": 
+	{
+		"Module.NDIIOEditor.cpp.obj": [
+			"NDIIOEditor.init.gen.cpp.obj",
+			"NDIMediaReceiverFactory.gen.cpp.obj",
+			"NDIMediaSenderFactory.gen.cpp.obj",
+			"NDIMediaSoundWaveFactory.gen.cpp.obj",
+			"NDIMediaTexture2DFactory.gen.cpp.obj",
+			"NDIMediaReceiverFactory.cpp.obj",
+			"NDIMediaSenderFactory.cpp.obj",
+			"NDIMediaSoundWaveFactory.cpp.obj",
+			"NDIMediaTexture2DFactory.cpp.obj",
+			"NDIIOEditorModule.cpp.obj",
+			"NDIWidgets.cpp.obj"
+		]
+	}
+}
