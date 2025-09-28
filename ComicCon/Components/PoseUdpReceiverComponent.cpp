@@ -12,11 +12,13 @@
 UPoseUdpReceiverComponent::UPoseUdpReceiverComponent()
 {
     PrimaryComponentTick.bCanEverTick = true;
+    RefreshFrameOrigin();
 }
 
 void UPoseUdpReceiverComponent::BeginPlay()
 {
     Super::BeginPlay();
+    SetFrameSize(FrameSize);
     RecvBuffer.SetNumUninitialized(2048);
     InitSocket(7777);
 }
@@ -318,4 +320,18 @@ FVector UPoseUdpReceiverComponent::MakeLocalFrom2D(const FVector2f& P, const FVe
     const float Y = Rel.X * PixelToUU;
     const float Z = -Rel.Y * PixelToUU;
     return FVector(DepthOffsetX, Y, Z);
+}
+
+void UPoseUdpReceiverComponent::SetFrameSize(FIntPoint InFrameSize)
+{
+    FrameSize.X = FMath::Max(1, InFrameSize.X);
+    FrameSize.Y = FMath::Max(1, InFrameSize.Y);
+    RefreshFrameOrigin();
+}
+
+void UPoseUdpReceiverComponent::RefreshFrameOrigin()
+{
+    FrameOrigin2D = FVector2f(
+        static_cast<float>(FrameSize.X) * 0.5f,
+        static_cast<float>(FrameSize.Y) * 0.5f);
 }

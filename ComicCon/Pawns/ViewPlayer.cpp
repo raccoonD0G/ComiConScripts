@@ -7,6 +7,7 @@
 #include "Actors/Amulet.h"
 #include "MediaPlate.h"
 #include "Actors/WebcamReceiver.h"
+#include "Components/PoseUdpReceiverComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Components/CameraBoundsClampComponent.h"
 #include "Components/AudioComponent.h"
@@ -48,19 +49,30 @@ void AViewPlayer::BeginPlay()
     check(AmuletClass);
     check(WebcamReceiverClass);
 
-    // --- MirroredPlayer ½ºÆù (½ºÄÉÀÏ Àû¿ë) ---
+    // --- MirroredPlayer  ( ) ---
     {
         const FVector MirroredScale(ViewScale);
         FTransform MirroredPlayerTF = FTransform(FRotator(), FVector(0, 0, -100), MirroredScale);
         MirroredPlayer = GetWorld()->SpawnActor<AMirroredPlayer>(MirroredPlayerClass, MirroredPlayerTF, Params);
+
+        if (MirroredPlayer)
+        {
+            if (UPoseUdpReceiverComponent* PoseReceiver = MirroredPlayer->GetPoseReceiver())
+            {
+                PoseReceiver->SetFrameSize(VideoFrameSize);
+            }
+        }
     }
 
-    // --- WebcamReceiver ½ºÆù (±âº»°ª * ViewScale) ---
+    // --- WebcamReceiver  (âº» * ViewScale) ---
     {
         const FRotator WebcamRot(0.0f, 90.0f, 90.0f);
         const FVector WebcamLoc(0, 0, -100);
 
-        const FVector WebcamBaseScale(10.8f, 19.2f, 1.0f);
+        const FVector WebcamBaseScale(
+            static_cast<float>(VideoFrameSize.X) * 0.01f,
+            static_cast<float>(VideoFrameSize.Y) * 0.01f,
+            1.0f);
         const FVector WebcamScale = WebcamBaseScale * ViewScale;
 
         FTransform WebcamReceiverTF(WebcamRot, WebcamLoc, WebcamScale);
@@ -75,7 +87,7 @@ void AViewPlayer::BeginPlay()
         WebcamReceiver->SetActorTransform(WebcamReceiverTF, false, nullptr, ETeleportType::ResetPhysics);
     }
 
-    // --- ºÎÀû(Amulet)Àº ±âÁ¸ ±×´ë·Î ---
+    // --- (Amulet)  ×´ ---
     {
         FTransform AmuletTF;
         AmuletLeft = GetWorld()->SpawnActorDeferred<AAmulet>(AmuletClass, AmuletTF);
@@ -143,7 +155,7 @@ void AViewPlayer::ShowDamagedEffect()
 
     const FVector Offset(NiagaraXOffset, 0.f, 0.f);
 
-    // ¸Å¹ø »õ ÄÄÆ÷³ÍÆ® »ý¼º (ÀÚµ¿ ÆÄ±«)
+    // Å¹  Æ®  (Úµ Ä±)
     UNiagaraComponent* Comp = UNiagaraFunctionLibrary::SpawnSystemAttached(
         DamagedEffect,
         SpringArmComponent,
