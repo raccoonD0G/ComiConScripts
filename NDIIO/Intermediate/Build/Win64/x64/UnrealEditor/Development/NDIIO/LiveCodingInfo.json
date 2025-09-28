@@ -1,0 +1,57 @@
+{
+	"RemapUnityFiles": 
+	{
+		"Module.NDIIO.1.cpp.obj": [
+			"NDIAudioChannels.gen.cpp.obj",
+			"NDIBroadcastActor.gen.cpp.obj",
+			"NDIBroadcastComponent.gen.cpp.obj",
+			"NDIBroadcastConfiguration.gen.cpp.obj",
+			"NDIBroadcastConfigurationLibrary.gen.cpp.obj",
+			"NDIConnectionInformation.gen.cpp.obj",
+			"NDIConnectionInformationLibrary.gen.cpp.obj",
+			"NDIFinderComponent.gen.cpp.obj",
+			"NDIIO.init.gen.cpp.obj",
+			"NDIIOLibrary.gen.cpp.obj",
+			"NDIIOPluginSettings.gen.cpp.obj",
+			"NDIMediaReceiver.gen.cpp.obj",
+			"NDIMediaSender.gen.cpp.obj"
+		],
+		"Module.NDIIO.2.cpp.obj": [
+			"NDIMediaSoundWave.gen.cpp.obj",
+			"NDIMediaTexture2D.gen.cpp.obj",
+			"NDIPTZControllerComponent.gen.cpp.obj",
+			"NDIReceiveActor.gen.cpp.obj",
+			"NDIReceiverComponent.gen.cpp.obj",
+			"NDIReceiverPerformanceData.gen.cpp.obj",
+			"NDIReceiverPerformanceDataLibrary.gen.cpp.obj",
+			"NDISourceBandwidth.gen.cpp.obj",
+			"NDITimecodeProvider.gen.cpp.obj",
+			"NDITriCasterExtComponent.gen.cpp.obj",
+			"NDIViewportCaptureComponent.gen.cpp.obj",
+			"NDIBroadcastActor.cpp.obj",
+			"NDITimecodeProvider.cpp.obj",
+			"NDIBroadcastComponent.cpp.obj",
+			"NDIFinderComponent.cpp.obj",
+			"NDIPTZControllerComponent.cpp.obj",
+			"NDIReceiverComponent.cpp.obj",
+			"NDITriCasterExtComponent.cpp.obj",
+			"NDIViewportCaptureComponent.cpp.obj",
+			"NDIIOPluginModule.cpp.obj",
+			"NDIReceiveActor.cpp.obj"
+		],
+		"Module.NDIIO.3.cpp.obj": [
+			"NDIIOLibrary.cpp.obj",
+			"NDIMediaReceiver.cpp.obj",
+			"NDIMediaSender.cpp.obj",
+			"NDIMediaSoundWave.cpp.obj",
+			"NDIMediaTexture2D.cpp.obj",
+			"NDIMediaTextureResource.cpp.obj",
+			"NDIMediaPlayer.cpp.obj",
+			"NDIConnectionService.cpp.obj",
+			"NDIFinderService.cpp.obj",
+			"NDIBroadcastConfiguration.cpp.obj",
+			"NDIConnectionInformation.cpp.obj",
+			"NDIReceiverPerformanceData.cpp.obj"
+		]
+	}
+}
