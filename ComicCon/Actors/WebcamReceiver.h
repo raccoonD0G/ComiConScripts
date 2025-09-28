@@ -18,6 +18,15 @@ public:
 
         virtual class UBoxComponent* GetClampVolume() const override;
 
+	void UpdateClampVolume(const FIntPoint& FrameSize);
+
+private:
+	// Baseline extent captured from the component defaults.
+	FVector DefaultClampExtent = FVector::ZeroVector;
+
+	UPROPERTY(EditAnywhere, Category = "Clamp")
+	FIntPoint ReferenceFrameSize = FIntPoint(1080, 1920);
+
 private:
         void UpdateClampVolumeBounds();
 

@@ -85,6 +85,11 @@ void AViewPlayer::BeginPlay()
 
         WebcamReceiver->FinishSpawning(WebcamReceiverTF);
         WebcamReceiver->SetActorTransform(WebcamReceiverTF, false, nullptr, ETeleportType::ResetPhysics);
+
+        if (AWebcamReceiver* Webcam = Cast<AWebcamReceiver>(WebcamReceiver))
+        {
+            Webcam->UpdateClampVolume(VideoFrameSize);
+        }
     }
 
     // --- (Amulet)  ״ ---
