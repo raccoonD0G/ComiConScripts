@@ -11,6 +11,7 @@
 #include "Async/Async.h"
 #include "SaveGames/ScoreSaveGame.h"
 #include <HUDs/BattleHUD.h>
+#include "Misc/DateTime.h"
 
 #include "Blueprint/UserWidget.h"     // UUserWidget, CreateWidget
 #include "Components/PanelWidget.h"   // UPanelWidget
@@ -23,9 +24,10 @@
 void ABattleGameMode::BeginPlay()
 {
     Super::BeginPlay();
-    
+
+    RecordBattleEntry();
     StartMatch();
-	Init();
+        Init();
 }
 
 void ABattleGameMode::Init()
@@ -197,11 +199,47 @@ void ABattleGameMode::SaveScore()
         SaveObj = Cast<UScoreSaveGame>(UGameplayStatics::LoadGameFromSlot(SaveSlotName, UserIndex));
     }
 
+    if (!SaveObj)
+    {
+        SaveObj = Cast<UScoreSaveGame>(UGameplayStatics::CreateSaveGameObject(UScoreSaveGame::StaticClass()));
+    }
+
     if(!SaveObj) return;
-    
+
     // 점수 갱신 로직
     SaveObj->LastScore = Score;
     SaveObj->BestScore = FMath::Max(SaveObj->BestScore, Score);
-    
+
+    UGameplayStatics::SaveGameToSlot(SaveObj, SaveSlotName, UserIndex);
+}
+
+void ABattleGameMode::RecordBattleEntry()
+{
+    UScoreSaveGame* SaveObj = nullptr;
+    if (UGameplayStatics::DoesSaveGameExist(SaveSlotName, UserIndex))
+    {
+        SaveObj = Cast<UScoreSaveGame>(UGameplayStatics::LoadGameFromSlot(SaveSlotName, UserIndex));
+    }
+
+    if (!SaveObj)
+    {
+        SaveObj = Cast<UScoreSaveGame>(UGameplayStatics::CreateSaveGameObject(UScoreSaveGame::StaticClass()));
+    }
+
+    if (!SaveObj) return;
+
+    SaveObj->TotalBattleCount++;
+
+    const FDateTime Now = FDateTime::Now();
+    const FString Timestamp = Now.ToString(TEXT("%Y-%m-%d %H:%M"));
+    SaveObj->BattleTimestamps.Add(Timestamp);
+
+    const int32 MaxEntries = 1000;
+    if (SaveObj->BattleTimestamps.Num() > MaxEntries)
+    {
+        const int32 Excess = SaveObj->BattleTimestamps.Num() - MaxEntries;
+        SaveObj->BattleTimestamps.RemoveAt(0, Excess, /*bAllowShrinking=*/false);
+    }
+
     UGameplayStatics::SaveGameToSlot(SaveObj, SaveSlotName, UserIndex);
 }
