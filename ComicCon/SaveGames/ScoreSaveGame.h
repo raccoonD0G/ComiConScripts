@@ -33,8 +33,14 @@ public:
     UPROPERTY(BlueprintReadWrite)
     int32 BestScore = 0;
 
-	UPROPERTY(BlueprintReadWrite)
-	TArray<FScoreEntry> ScoreHistory;
+        UPROPERTY(BlueprintReadWrite)
+        TArray<FScoreEntry> ScoreHistory;
+
+        UPROPERTY(BlueprintReadWrite)
+        int32 TotalBattleCount = 0;
+
+        UPROPERTY(BlueprintReadWrite)
+        TArray<FString> BattleTimestamps;
 
 	UPROPERTY(BlueprintReadWrite)
 	int32 CurrentHunterCount = 1004;
