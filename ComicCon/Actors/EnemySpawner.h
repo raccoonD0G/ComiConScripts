@@ -16,24 +16,25 @@ public:
 	AEnemySpawner();
 
 protected:
-	virtual void BeginPlay() override;
-	virtual void Tick(float DeltaTime) override;
+        virtual void BeginPlay() override;
+        virtual void Tick(float DeltaTime) override;
 
 public:
-	UFUNCTION(BlueprintCallable)
-	void Start();
+        UFUNCTION(BlueprintCallable)
+        void Start();
 
 	UFUNCTION(BlueprintCallable)
 	void Stop();
 
 protected:
-	void ScheduleNextSpawn();
-	void SpawnOnce();
+        void ScheduleNextSpawn();
+        void SpawnOnce();
+        void InitializeRandomStream();
 
-	// ====== 스폰 포인트/설정 (기존) ======
-	UFUNCTION(BlueprintNativeEvent)
-	FTransform GetSpawnTransform();
-	virtual FTransform GetSpawnTransform_Implementation();
+        // ====== 스폰 포인트/설정 (기존) ======
+        UFUNCTION(BlueprintNativeEvent)
+        FTransform GetSpawnTransform();
+        virtual FTransform GetSpawnTransform_Implementation();
 
 	UFUNCTION(BlueprintNativeEvent)
 	void ConfigureSpawnedEnemy(AEnemyBase* NewEnemy);
@@ -91,10 +92,12 @@ protected:
 	// 예시용 RNG
 	FRandomStream Rng;
 
-	UPROPERTY()
-	bool bRunning = false;
+        UPROPERTY()
+        bool bRunning = false;
 
-	FTimerHandle SpawnLoopTimerHandle;
+        uint8 bRandomStreamInitialized : 1 = false;
+
+        FTimerHandle SpawnLoopTimerHandle;
 
 // Box Section
 protected:
