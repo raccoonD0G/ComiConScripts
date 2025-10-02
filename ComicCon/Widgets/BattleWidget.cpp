@@ -85,26 +85,6 @@ void UBattleWidget::SetTimerText(int32 InSecond)
 {
     if (TimerText)
     {
-        // int32 Min = InSecond / 60;
-        // int32 Sec = InSecond % 60;
-        //
-        // FString MinStr;
-        // FString SecStr;
-        //
-        // if (Min < 10)
-        // {
-        //     MinStr.Append(TEXT("0"));
-        // }
-        //
-        // if (Sec < 10)
-        // {
-        //     SecStr.Append(TEXT("0"));
-        // }
-        //
-        // MinStr.Append(FString::FromInt(Min));
-        // SecStr.Append(FString::FromInt(Sec));
-        //
-        // FString TimeRemaining = MinStr + TEXT(":") + SecStr;
         TimerText->SetText(FText::AsNumber(InSecond));
     }
 }
