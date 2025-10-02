@@ -17,7 +17,7 @@ void UBattleWidget::NativeConstruct()
     if (BattleGameState)
     {
         BattleGameState->OnScoreChanged.AddDynamic(this, &UBattleWidget::SetScoreText);
-        BattleGameState->OnCountdownSec.AddDynamic(this, &UBattleWidget::SetTimerText);
+        BattleGameState->OnBattleTimerSec.AddDynamic(this, &UBattleWidget::SetTimerText);
     }
 
     APawn* Pawn = UGameplayStatics::GetPlayerPawn(this, 0);

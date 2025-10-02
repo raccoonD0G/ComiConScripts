@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "BattleWidget.generated.h"
 
+
 /**
  * 
  */
@@ -18,14 +19,12 @@ protected:
     virtual void NativeConstruct() override;
 
 private:
-    /** ���� ���� �� ǥ�� */
     UPROPERTY(meta = (BindWidget))
     class UTextBlock* MyScoreText;
 
 	UPROPERTY(meta = (BindWidget))
 	class UTextBlock* HighScoreText;
 
-    /** ü�� ǥ�� �� */
     UPROPERTY(meta = (BindWidget))
     class UProgressBar* HealthProgressBar;
 
@@ -35,7 +34,6 @@ private:
 	UPROPERTY(meta = (BindWidget))
 	class UTextBlock* Text_HounterCount;
 
-    // �ʿ� �� �Լ� �߰� ����
     UFUNCTION(BlueprintCallable, Category = "BattleWidget")
     void SetScoreText(int32 Count);
 

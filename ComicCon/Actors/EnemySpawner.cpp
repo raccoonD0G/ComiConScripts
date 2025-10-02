@@ -3,7 +3,8 @@
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
 #include "Characters/EnemyBase.h"
-#include <Components/BoxComponent.h>
+#include "Components/BoxComponent.h"
+#include "GameStates/BattleGameState.h"
 
 AEnemySpawner::AEnemySpawner()
 {
@@ -20,8 +21,13 @@ void AEnemySpawner::BeginPlay()
 
     if (bAutoStart)
     {
-            Start();
+		Start();
     }
+
+	if (ABattleGameState* GS = GetWorld()->GetGameState<ABattleGameState>())
+	{
+		GS->OnBattleTimerStarted.AddDynamic(this, &AEnemySpawner::Start);
+	}
 }
 
 void AEnemySpawner::Tick(float DeltaTime)

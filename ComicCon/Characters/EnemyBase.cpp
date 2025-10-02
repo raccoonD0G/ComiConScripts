@@ -80,8 +80,8 @@ void AEnemyBase::BeginPlay()
 	ABattleGameState* BattleGameState = GetWorld()->GetGameState<ABattleGameState>();
 	if (BattleGameState)
 	{
-		const float MaxSec = BattleGameState->GetMaxSeconds();
-		const float RemSec = BattleGameState->GetRemainingSeconds();
+		const float MaxSec = BattleGameState->GetBattleMaxSeconds();
+		const float RemSec = BattleGameState->GetBattleRemainingSeconds();
 
 		if (MaxSec > KINDA_SMALL_NUMBER)
 		{

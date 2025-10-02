@@ -172,7 +172,7 @@ void ULobbyWidget::ChangeIntensityFloor(float f)
 
 void ULobbyWidget::ChangeBrightness(float f)
 {
-    UiMID->SetScalarParameterValue("IntensityFloor", f);
+    UiMID->SetScalarParameterValue("Brightness", f);
 
     Brightness->SetText(FText::AsNumber(f));
     
@@ -181,7 +181,7 @@ void ULobbyWidget::ChangeBrightness(float f)
 
 void ULobbyWidget::ChangeContrast(float f)
 {
-    UiMID->SetScalarParameterValue("IntensityFloor", f);
+    UiMID->SetScalarParameterValue("Contrast", f);
 
     Contrast->SetText(FText::AsNumber(f));
     
@@ -190,7 +190,7 @@ void ULobbyWidget::ChangeContrast(float f)
 
 void ULobbyWidget::ChangeSaturation(float f)
 {
-    UiMID->SetScalarParameterValue("IntensityFloor", f);
+    UiMID->SetScalarParameterValue("Saturation", f);
 
     Saturation->SetText(FText::AsNumber(f));
     
@@ -199,7 +199,7 @@ void ULobbyWidget::ChangeSaturation(float f)
 
 void ULobbyWidget::ChangeHueShift(float f)
 {
-    UiMID->SetScalarParameterValue("IntensityFloor", f);
+    UiMID->SetScalarParameterValue("Hue Shift", f);
 
     HueShift->SetText(FText::AsNumber(f));
     

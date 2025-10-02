@@ -32,7 +32,7 @@ void ABattleGameMode::Init()
 {
     if (ABattleGameState* BattleGameState = GetGameState<ABattleGameState>())
     {
-		BattleGameState->OnCountdownFinished.AddDynamic(this, &ABattleGameMode::EndMatch);
+        BattleGameState->OnBattleTimerFinished.AddDynamic(this, &ABattleGameMode::EndMatch);
     }
     else
     {

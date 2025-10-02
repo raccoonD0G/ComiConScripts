@@ -8,6 +8,10 @@
 #include "Engine/Engine.h"          // GEngine
 #include "Engine/World.h"           // GetWorld()
 #include "Misc/OutputDeviceNull.h"  // 로그용
+#include "Materials/MaterialInstanceDynamic.h"
+#include "Materials/MaterialInstance.h"
+#include "Materials/MaterialInterface.h"
+
 AWebcamReceiver::AWebcamReceiver()
 {
 	PrimaryActorTick.bCanEverTick = false;
@@ -26,10 +30,6 @@ UBoxComponent* AWebcamReceiver::GetClampVolume() const
 {
 	return ClampVolume;
 }
-
-#include "Materials/MaterialInstanceDynamic.h"
-#include "Materials/MaterialInstance.h"
-#include "Materials/MaterialInterface.h"
 
 void AWebcamReceiver::BeginPlay()
 {
@@ -85,6 +85,11 @@ void AWebcamReceiver::BeginPlay()
     VideoMaterialInstance->SetScalarParameterValue(TEXT("Alpha Min"), LoadedSave->AlphaMin);
     VideoMaterialInstance->SetScalarParameterValue(TEXT("Alpha Divisor"), LoadedSave->AlphaDivisor);
     VideoMaterialInstance->SetScalarParameterValue(TEXT("IntensityFloor"), LoadedSave->IntensityFloor);
+
+    VideoMaterialInstance->SetScalarParameterValue(TEXT("Brightness"), LoadedSave->Brightness);
+    VideoMaterialInstance->SetScalarParameterValue(TEXT("Contrast"), LoadedSave->Contrast);
+    VideoMaterialInstance->SetScalarParameterValue(TEXT("Saturation"), LoadedSave->Saturation);
+    VideoMaterialInstance->SetScalarParameterValue(TEXT("Hue Shift"), LoadedSave->HueShift);
 
     // 5) 디버그 출력
     const FString Msg = FString::Printf(

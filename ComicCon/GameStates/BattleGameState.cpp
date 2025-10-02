@@ -1,77 +1,107 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
+// BattleGameState.cpp
+
 #include "GameStates/BattleGameState.h"
 #include "TimerManager.h"
-#include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
 
 ABattleGameState::ABattleGameState()
 {
 }
 
+void ABattleGameState::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	SetCurrentState(EGamePlayState::BeforeBattle);
+}
+
 void ABattleGameState::BeginPlay()
 {
-    Super::BeginPlay();
-
-    if (bAutoStartCountdown)
-    {
-        StartCountdown();
-    }
+	Super::BeginPlay();
 }
 
-void ABattleGameState::HandleCountdownTick()
+void ABattleGameState::HandleBattleTimerTick()
 {
-    if (!bCountdownActive)
-    {
-            return; // 안전장치
-    }
-
-        // 1) 남은 시간 감소
-	if (RemainingSeconds > 0)
+	if (!bBattleTimerActive)
 	{
-		--RemainingSeconds;
+		return; // 안전장치
 	}
 
-	// 2) 감소 직후 현재 값 브로드캐스트 (0도 전달됨)
-	OnCountdownSec.Broadcast(RemainingSeconds);
+	// 1) 남은 시간 감소
+	if (BattleRemainingSeconds > 0)
+	{
+		--BattleRemainingSeconds;
+	}
 
-	// 3) 0 이하가 되면 한번만 종료 브로드캐스트 후 레벨 전환
-    if (RemainingSeconds <= 0)
-    {
-        bCountdownActive = false;
+	// 2) 감소 직후 브로드캐스트 (0도 전달)
+	OnBattleTimerSec.Broadcast(BattleRemainingSeconds);
 
-        if (UWorld* World = GetWorld())
-        {
-                World->GetTimerManager().ClearTimer(CountdownTimerHandle);
+	// 3) 0 이하가 되면 종료 처리
+	if (BattleRemainingSeconds <= 0)
+	{
+		bBattleTimerActive = false;
 
-                // UI/사운드가 종료 이벤트에 반응할 수 있게 먼저 브로드캐스트
-                OnCountdownFinished.Broadcast();
-        }
-    }
+		if (UWorld* World = GetWorld())
+		{
+			World->GetTimerManager().ClearTimer(BattleTimerHandle);
+			// UI/사운드가 종료 이벤트에 반응할 수 있도록 먼저 브로드캐스트
+			OnBattleTimerFinished.Broadcast();
+		}
+	}
 }
 
-void ABattleGameState::StartCountdown()
+void ABattleGameState::SetCurrentState(EGamePlayState NewState)
 {
-    if (bCountdownActive)
-    {
-        if (UWorld* World = GetWorld())
-        {
-                World->GetTimerManager().ClearTimer(CountdownTimerHandle);
-        }
-    }
+	switch (NewState)
+	{
+	case EGamePlayState::BeforeBattle:
+		OnBeforeBattleStateEntered.Broadcast();
+		if (UWorld* World = GetWorld())
+		{
+			// 시작 전 3초 타이머 (Ready)
+			World->GetTimerManager().SetTimer(
+				BeforeBattleTimerHandle, this, &ABattleGameState::StartBattle, 3.0f, false);
+		}
+		break;
 
-    bCountdownActive = true;
+	case EGamePlayState::OnBattle:
+		StartBattleTimer();
+		OnBattleStateEntered.Broadcast();
+		break;
+	}
 
-    RemainingSeconds = MaxSeconds;
+	CurrentState = NewState;
+}
 
-    if (UWorld* World = GetWorld())
-    {
-            World->GetTimerManager().SetTimer(CountdownTimerHandle, this, &ABattleGameState::HandleCountdownTick, 1.0f, true);
-    }
+void ABattleGameState::StartBattle()
+{
+	SetCurrentState(EGamePlayState::OnBattle);
+}
 
-    OnCountdownStarted.Broadcast();
-    OnCountdownSec.Broadcast(RemainingSeconds);
+void ABattleGameState::StartBattleTimer()
+{
+	// 이미 돌고 있다면 정리
+	if (bBattleTimerActive)
+	{
+		if (UWorld* World = GetWorld())
+		{
+			World->GetTimerManager().ClearTimer(BattleTimerHandle);
+		}
+	}
+
+	bBattleTimerActive = true;
+	BattleRemainingSeconds = BattleMaxSeconds;
+
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().SetTimer(
+			BattleTimerHandle, this, &ABattleGameState::HandleBattleTimerTick, 1.0f, true);
+	}
+
+	OnBattleTimerStarted.Broadcast();
+	OnBattleTimerSec.Broadcast(BattleRemainingSeconds);
 }
 
 void ABattleGameState::AddScore(int32 InScore)
