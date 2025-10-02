@@ -34,6 +34,8 @@ void UGameCompleteWidget::NativeConstruct()
     {
         StartImpact(0.f); // 즉시 팡 재생
     }
+
+    StartSound();
 }
 
 void UGameCompleteWidget::StartImpact(float InDuration)

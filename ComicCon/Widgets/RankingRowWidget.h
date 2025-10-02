@@ -38,6 +38,9 @@ public:
     UFUNCTION()
     void ChangeWidget(int32 score, int32 hunterNum);
 
+    UFUNCTION(BlueprintImplementableEvent)
+    void PlayImpactSound();
+
 protected:
     UPROPERTY(meta = (BindWidget))
     class UTextBlock* RankText;
@@ -72,4 +75,15 @@ protected:
     /** 애니메이션 완료 시 호출될 함수 */
     UFUNCTION()
     void HandleAnimationFinished();
+
+private:
+    FTimerHandle TimerHandle1;
+
+    FTimerHandle TimerHandle2;
+
+    UPROPERTY()
+    int32 CScore = 0;
+    
+    UPROPERTY()
+    int32 HNum = 0;
 };

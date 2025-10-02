@@ -20,6 +20,9 @@ public:
 
 	virtual class UBoxComponent* GetClampVolume() const override;
 
+protected:
+	virtual void BeginPlay() override;
+
 private:
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, meta = (AllowPrivateAccess = true))
 	TObjectPtr<class UBoxComponent> ClampVolume = nullptr;

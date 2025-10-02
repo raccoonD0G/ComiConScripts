@@ -30,6 +30,13 @@ void URankingRowWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTim
 
 void URankingRowWidget::NativeDestruct()
 {
+    if (UWorld* World = GetWorld())
+    {
+        World->GetTimerManager().ClearTimer(TimerHandle1);
+
+        World->GetTimerManager().ClearTimer(TimerHandle2);
+    }
+    
     Super::NativeDestruct();
 }
 
@@ -110,20 +117,19 @@ FText URankingRowWidget::MakeOrdinalText(int32 Rank)
 
 void URankingRowWidget::ChangeScore()
 {
-    FTimerHandle TimerHandle;
-    
     if (UWorld* World = GetWorld())
     {
-        // 1초마다 실행되는 람다 타이머
+        World->GetTimerManager().ClearTimer(TimerHandle2);
+        
         World->GetTimerManager().SetTimer(
-            TimerHandle,
+            TimerHandle2,
             FTimerDelegate::CreateWeakLambda(this, [this]()
             {
                 UE_LOG(LogTemp, Log, TEXT("ResultWidget 타이머 Tick 실행"));
                 
                 bCheckChange = true;
             }),
-            1.5f,   
+            1.0f,   
             false    
         );
     }
@@ -154,21 +160,28 @@ void URankingRowWidget::FillImage()
 
 void URankingRowWidget::ChangeWidget(int32 score, int32 hunterNum)
 {
-    if (ScoreText) { ScoreText->SetText(FText::AsNumber(score)); }
-    if (Text_HunterNum) { Text_HunterNum->SetText(FText::FromString(FString::FromInt(hunterNum))); }
-    
-    FTimerHandle TimerHandle;
+    CScore = score;
+    HNum = hunterNum;
     
     if (UWorld* World = GetWorld())
     {
+        World->GetTimerManager().ClearTimer(TimerHandle1);
+        
         World->GetTimerManager().SetTimer(
-            TimerHandle,
+            TimerHandle1,
             FTimerDelegate::CreateWeakLambda(this, [this]()
             {
                 if(ChangeAnimation)
                 {
                     PlayAnimation(ChangeAnimation);
                 }
+
+                ChangeScore();
+
+                if (ScoreText) { ScoreText->SetText(FText::AsNumber(CScore)); }
+                if (Text_HunterNum) { Text_HunterNum->SetText(FText::FromString(FString::FromInt(HNum))); }
+
+                PlayImpactSound();
             }),
             1.0f,   
             false    

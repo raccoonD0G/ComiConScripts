@@ -25,6 +25,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Impact")
 	bool IsImpactPlaying() const { return bImpactPlaying; }
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void StartSound();
+	
 protected:
 	// UUserWidget 수명주기
 	virtual void NativeConstruct() override;
@@ -54,7 +57,7 @@ protected:
 
 	/** 총 재생 시간(초) */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Impact|Tuning")
-	float DefaultDuration = 0.60f;
+	float DefaultDuration = 0.6f;
 
 	/** 팝(빠른 확대) 구간 비율 [0~1] */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Impact|Tuning", meta = (ClampMin = "0.1", ClampMax = "0.9"))

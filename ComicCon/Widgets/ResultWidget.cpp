@@ -23,7 +23,7 @@ void UResultWidget::NativeDestruct()
 
 void UResultWidget::Populate()
 {
-	PendingScores = {{}};
+	PendingScores.Reset();
 	
 	if (!ListBox || !RowWidgetClass) return;
 
@@ -113,6 +113,7 @@ void UResultWidget::SpawnNextRow()
 	if (!ListBox || !RowWidgetClass) return;
 
 	URankingRowWidget* Row = CreateWidget<URankingRowWidget>(GetWorld(), RowWidgetClass);
+	
 	if (!Row) return;
 
 	const int32 Rank = CurrentIndex + 1;
@@ -152,25 +153,4 @@ void UResultWidget::ListBoxCheck(int32 Check)
 	ChangeRow = Cast<URankingRowWidget>(ListBox->GetChildAt(Check));
 
 	ChangeRow->ChangeWidget(PendingScores[Check].Score, PendingScores[Check].HunterCount);
-
-	FTimerHandle TimerHandle;
-    
-	if (UWorld* World = GetWorld())
-	{
-		// 1초마다 실행되는 람다 타이머
-		World->GetTimerManager().SetTimer(
-			TimerHandle,
-			FTimerDelegate::CreateWeakLambda(this, [this]()
-			{
-				ChangeRankWidget();
-			}),
-			1.0f,   
-			false    
-		);
-	}
-}
-
-void UResultWidget::ChangeRankWidget()
-{
-	ChangeRow->ChangeScore();
 }

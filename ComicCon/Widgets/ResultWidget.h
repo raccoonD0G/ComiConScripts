@@ -54,8 +54,6 @@ private:
 
 	void ListBoxCheck(int32 Check);
 
-	void ChangeRankWidget();
-
 	UPROPERTY()
 	TArray<FScoreEntry> PendingScores;
 	

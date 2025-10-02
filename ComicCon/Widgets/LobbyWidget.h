@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "Components/Slider.h"
 #include "LobbyWidget.generated.h"
 
 /**
@@ -14,9 +15,189 @@ class COMICCON_API ULobbyWidget : public UUserWidget
 {
 	GENERATED_BODY()
 
+public:
+	UPROPERTY(meta = (BindWidget))
+	class UImage* VideoImage = nullptr;
+
+	UPROPERTY(meta = (BindWidget))
+	class UEditableTextBox* LumaMask;
+	
+	UPROPERTY(meta = (BindWidget))
+	UEditableTextBox* AlphaMin;
+	
+	UPROPERTY(meta = (BindWidget))
+	UEditableTextBox* AlphaDivisor;
+	
+	UPROPERTY(meta = (BindWidget))
+	UEditableTextBox* IntensityFloor;
+
+	UPROPERTY(meta = (BindWidget))
+	UEditableTextBox* Brightness;
+
+	UPROPERTY(meta = (BindWidget))
+	UEditableTextBox* Contrast;
+
+	UPROPERTY(meta = (BindWidget))
+	UEditableTextBox* Saturation;
+
+	UPROPERTY(meta = (BindWidget))
+	UEditableTextBox* HueShift;
+
+	UPROPERTY(meta = (BindWidget))
+	USlider* LumaMaskSlider;
+
+	UPROPERTY(meta = (BindWidget))
+	USlider* AlphaMinSlider;
+
+	UPROPERTY(meta = (BindWidget))
+	USlider* AlphaDivisorSlider;
+
+	UPROPERTY(meta = (BindWidget))
+	USlider* IntensityFloorSlider;
+	
+	UPROPERTY(meta = (BindWidget))
+	USlider* BrightnessSlider;
+
+	UPROPERTY(meta = (BindWidget))
+	USlider* ContrastSlider;
+
+	UPROPERTY(meta = (BindWidget))
+	USlider* SaturationSlider;
+
+	UPROPERTY(meta = (BindWidget))
+	USlider* HueShiftSlider;
+
+	// UI용 머테리얼 (Domain=User Interface)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ColorPicker")
+	UMaterialInterface* UiMaterial = nullptr;
+
+	// RenderTarget에 그릴 머테리얼 (Domain=Surface, Unlit)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ColorPicker")
+	UMaterialInterface* RtMaterial = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ColorPicker")
+	UTextureRenderTarget2D* RenderTarget = nullptr;
+
+	// 클릭 시 선택된 색 (마지막 값 저장)
+	UPROPERTY(BlueprintReadOnly, Category="ColorPicker")
+	FLinearColor PickedColor = FLinearColor::Black;
+
+	UPROPERTY()
+	float SaveLumaMask = 0.0f;
+
+	UPROPERTY()
+	float SaveAlphaMin = 0.0f;
+
+	UPROPERTY()
+	float SaveAlphaDivisor = 0.0f;
+
+	UPROPERTY()
+	float SaveIntensityFloor = 0.0f;
+
+	UPROPERTY()
+	float SaveBrightness = 0.0f;
+
+	UPROPERTY()
+	float SaveContrast = 0.0f;
+
+	UPROPERTY()
+	float SaveSaturation = 0.0f;
+
+	UPROPERTY()
+	float SaveHueShift = 0.0f;
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void test(FLinearColor color);
+
+	UFUNCTION()
+	void OnValueCommittedLumaMask(const FText& Text, ETextCommit::Type CommitMethod);
+
+	UFUNCTION()
+	void OnValueCommittedAlphaMin(const FText& Text, ETextCommit::Type CommitMethod);
+
+	UFUNCTION()
+	void OnValueCommittedAlphaDivisor(const FText& Text, ETextCommit::Type CommitMethod);
+
+	UFUNCTION()
+	void OnValueCommittedIntensityFloor(const FText& Text, ETextCommit::Type CommitMethod);
+
+	UFUNCTION()
+	void OnValueCommittedBrightness(const FText& Text, ETextCommit::Type CommitMethod);
+
+	UFUNCTION()
+	void OnValueCommittedContrast(const FText& Text, ETextCommit::Type CommitMethod);
+
+	UFUNCTION()
+	void OnValueCommittedSaturation(const FText& Text, ETextCommit::Type CommitMethod);
+
+	UFUNCTION()
+	void OnValueCommittedHueShift(const FText& Text, ETextCommit::Type CommitMethod);
+
+	UFUNCTION()
+	void OnSliderValueChangedLumaMask(const float Value);
+
+	UFUNCTION()
+	void OnSliderValueChangedAlphaMin(const float Value);
+	
+	UFUNCTION()
+	void OnSliderValueChangedAlphaDivisor(const float Value);
+    	
+	UFUNCTION()
+	void OnSliderValueChangedIntensityFloor(const float Value);
+
+	UFUNCTION()
+	void OnSliderValueChangedBrightness(const float Value);
+
+	UFUNCTION()
+	void OnSliderValueChangedContrast(const float Value);
+
+	UFUNCTION()
+	void OnSliderValueChangedSaturation(const float Value);
+
+	UFUNCTION()
+	void OnSliderValueChangedHueShift(const float Value);
+	
+	UFUNCTION()
+	void ChangeKeyColor();
+
+	UFUNCTION()
+	void ChangeLumaMask(float f);
+
+	UFUNCTION()
+	void ChangeAlphaMin(float f);
+
+	UFUNCTION()
+	void ChangeAlphaDivisor(float f);
+
+	UFUNCTION()
+	void ChangeIntensityFloor(float f);
+
+	UFUNCTION()
+	void ChangeBrightness(float f);
+	
+	UFUNCTION()
+	void ChangeContrast(float f);
+	
+	UFUNCTION()
+	void ChangeSaturation(float f);
+	
+	UFUNCTION()
+	void ChangeHueShift(float f);
+
+	UFUNCTION(BlueprintCallable)
+	void SaveParam();
+
+	UFUNCTION(BlueprintCallable)
+	void ResetParam();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void ResetMap();
+	
 protected:
 	virtual void NativeConstruct() override;
-	
+
+	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+
 private:
 	UFUNCTION(BlueprintCallable)
 	void SetWindowed(int32 Width, int32 Height);
@@ -24,4 +205,18 @@ private:
 	UFUNCTION(BlueprintCallable)
 	void SetFullscreen(bool bTrueFullscreen);
 
+	UPROPERTY()
+	UMaterialInstanceDynamic* UiMID = nullptr;
+
+	UPROPERTY()
+	UMaterialInstanceDynamic* RtMID = nullptr;
+
+	// Image 위젯의 Geometry 기준으로 UV 계산 (Stretch=Fill 기본, 필요 시 StretchToFit 보정 코드 참고)
+	bool ComputeUVOnImage(const FPointerEvent& MouseEvent, FVector2D& OutUV) const;
+
+	// 필요 시: ScaleToFit 보정 버전
+	bool ComputeUV_ScaleToFit(const FPointerEvent& MouseEvent, FVector2D& OutUV) const;
+
+	static constexpr const TCHAR* SaveSlotName = TEXT("BattleSave");
+	static constexpr int32 UserIndex = 0;
 };
