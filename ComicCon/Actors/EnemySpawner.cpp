@@ -16,21 +16,12 @@ AEnemySpawner::AEnemySpawner()
 
 void AEnemySpawner::BeginPlay()
 {
-	Super::BeginPlay();
+        Super::BeginPlay();
 
-	if (bUseDeterministicSeed)
-	{
-		Rng.Initialize(RandomSeed);
-	}
-	else
-	{
-		Rng.GenerateNewSeed();
-	}
-
-	if (bAutoStart)
-	{
-		Start();
-	}
+        if (bAutoStart)
+        {
+                Start();
+        }
 }
 
 void AEnemySpawner::Tick(float DeltaTime)
@@ -83,11 +74,13 @@ void AEnemySpawner::OnSpawnedEnemyDestroyed(AActor* DestroyedActor)
 // ====== 기존 루프 ======
 void AEnemySpawner::Start()
 {
-	if (bRunning) return;
-	bRunning = true;
+        InitializeRandomStream();
 
-	if (InitialDelay < KINDA_SMALL_NUMBER)
-	{
+        if (bRunning) return;
+        bRunning = true;
+
+        if (InitialDelay < KINDA_SMALL_NUMBER)
+        {
 		ScheduleNextSpawn();
 	}
 	else
@@ -95,6 +88,25 @@ void AEnemySpawner::Start()
 		GetWorld()->GetTimerManager().SetTimer(
 			SpawnLoopTimerHandle, this, &AEnemySpawner::ScheduleNextSpawn, InitialDelay, false);
 	}
+}
+
+void AEnemySpawner::InitializeRandomStream()
+{
+        if (bRandomStreamInitialized)
+        {
+                return;
+        }
+
+        if (bUseDeterministicSeed)
+        {
+                Rng.Initialize(RandomSeed);
+        }
+        else
+        {
+                Rng.GenerateNewSeed();
+        }
+
+        bRandomStreamInitialized = true;
 }
 
 void AEnemySpawner::Stop()

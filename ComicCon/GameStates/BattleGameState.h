@@ -26,12 +26,15 @@ public:
 	ABattleGameState();
 
 protected:
-	virtual void BeginPlay() override;
+        virtual void BeginPlay() override;
 
 public:
-	/** 카운트다운 시작 시 1회 브로드캐스트 */
-	UPROPERTY(BlueprintAssignable, Category = "Timer")
-	FOnCountdownStarted OnCountdownStarted;
+        UFUNCTION(BlueprintCallable, Category = "Timer")
+        void StartCountdown();
+
+        /** 카운트다운 시작 시 1회 브로드캐스트 */
+        UPROPERTY(BlueprintAssignable, Category = "Timer")
+        FOnCountdownStarted OnCountdownStarted;
 
 	/** 1초마다 남은 시간 브로드캐스트 */
 	UPROPERTY(BlueprintAssignable, Category = "Timer")
@@ -51,17 +54,20 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timer")
 	int32 MaxSeconds = 60;
 
-	/** 남은 시간(초). UI에서 바인딩해서 쓰기 좋게 공개 */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Timer")
-	int32 RemainingSeconds = 60;
+        /** 남은 시간(초). UI에서 바인딩해서 쓰기 좋게 공개 */
+        UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Timer")
+        int32 RemainingSeconds = 60;
 
-	/** 1초마다 호출되는 콜백 */
-	UFUNCTION()
-	void HandleCountdownTick();
+        UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timer")
+        bool bAutoStartCountdown = true;
+
+        /** 1초마다 호출되는 콜백 */
+        UFUNCTION()
+        void HandleCountdownTick();
 
 private:
-	FTimerHandle CountdownTimerHandle;
-	uint8 bHasFinished : 1 = false;
+        FTimerHandle CountdownTimerHandle;
+        uint8 bCountdownActive : 1 = false;
 
 // Score Section
 
