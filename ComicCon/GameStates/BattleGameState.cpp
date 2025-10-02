@@ -12,20 +12,20 @@ ABattleGameState::ABattleGameState()
 
 void ABattleGameState::BeginPlay()
 {
-        Super::BeginPlay();
+    Super::BeginPlay();
 
-        if (bAutoStartCountdown)
-        {
-                StartCountdown();
-        }
+    if (bAutoStartCountdown)
+    {
+        StartCountdown();
+    }
 }
 
 void ABattleGameState::HandleCountdownTick()
 {
-        if (!bCountdownActive)
-        {
-                return; // 안전장치
-        }
+    if (!bCountdownActive)
+    {
+            return; // 안전장치
+    }
 
         // 1) 남은 시간 감소
 	if (RemainingSeconds > 0)
@@ -37,41 +37,41 @@ void ABattleGameState::HandleCountdownTick()
 	OnCountdownSec.Broadcast(RemainingSeconds);
 
 	// 3) 0 이하가 되면 한번만 종료 브로드캐스트 후 레벨 전환
-        if (RemainingSeconds <= 0)
+    if (RemainingSeconds <= 0)
+    {
+        bCountdownActive = false;
+
+        if (UWorld* World = GetWorld())
         {
-                bCountdownActive = false;
+                World->GetTimerManager().ClearTimer(CountdownTimerHandle);
 
-                if (UWorld* World = GetWorld())
-                {
-                        World->GetTimerManager().ClearTimer(CountdownTimerHandle);
-
-                        // UI/사운드가 종료 이벤트에 반응할 수 있게 먼저 브로드캐스트
-                        OnCountdownFinished.Broadcast();
-                }
+                // UI/사운드가 종료 이벤트에 반응할 수 있게 먼저 브로드캐스트
+                OnCountdownFinished.Broadcast();
         }
+    }
 }
 
 void ABattleGameState::StartCountdown()
 {
-        if (bCountdownActive)
-        {
-                if (UWorld* World = GetWorld())
-                {
-                        World->GetTimerManager().ClearTimer(CountdownTimerHandle);
-                }
-        }
-
-        bCountdownActive = true;
-
-        RemainingSeconds = MaxSeconds;
-
+    if (bCountdownActive)
+    {
         if (UWorld* World = GetWorld())
         {
-                World->GetTimerManager().SetTimer(CountdownTimerHandle, this, &ABattleGameState::HandleCountdownTick, 1.0f, true);
+                World->GetTimerManager().ClearTimer(CountdownTimerHandle);
         }
+    }
 
-        OnCountdownStarted.Broadcast();
-        OnCountdownSec.Broadcast(RemainingSeconds);
+    bCountdownActive = true;
+
+    RemainingSeconds = MaxSeconds;
+
+    if (UWorld* World = GetWorld())
+    {
+            World->GetTimerManager().SetTimer(CountdownTimerHandle, this, &ABattleGameState::HandleCountdownTick, 1.0f, true);
+    }
+
+    OnCountdownStarted.Broadcast();
+    OnCountdownSec.Broadcast(RemainingSeconds);
 }
 
 void ABattleGameState::AddScore(int32 InScore)

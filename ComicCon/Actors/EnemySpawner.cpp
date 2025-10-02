@@ -16,12 +16,12 @@ AEnemySpawner::AEnemySpawner()
 
 void AEnemySpawner::BeginPlay()
 {
-        Super::BeginPlay();
+    Super::BeginPlay();
 
-        if (bAutoStart)
-        {
-                Start();
-        }
+    if (bAutoStart)
+    {
+            Start();
+    }
 }
 
 void AEnemySpawner::Tick(float DeltaTime)
