@@ -131,7 +131,7 @@ void ABattleGameMode::EndMatch()
             {
                 UGameplayStatics::OpenLevel(this, FName(TEXT("ResultMap")));
             }),
-        2.0f,
+        4.0f,
         false
     );
 
