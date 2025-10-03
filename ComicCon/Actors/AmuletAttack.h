@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -18,6 +18,16 @@ public:
 
     void SpawnOrUpdateFX(const FVector& Center, const FRotator& Rotation, float InLength, float InWidth);
 
+private:
+    // 최소 전체 스윙 길이(cm) — 이 값보다 작으면 이 값으로 보정됩니다.
+    UPROPERTY(EditAnywhere, Category = "Attack|Config")
+    float MinAttackLength = 150.0f;
+
+    // 최소 FX 전체 길이(cm) — FX 스케일 계산에 사용됩니다.
+    // 보통 MinAttackLength와 같게 두면 직관적입니다.
+    UPROPERTY(EditAnywhere, Category = "Attack|Config")
+    float MinFXLength = 150.0f;
+
 //Damage Section
 private:
     UFUNCTION()
@@ -29,7 +39,7 @@ private:
     UPROPERTY(EditAnywhere, Category = "Attack|Damage")
     TSubclassOf<UDamageType> DamageTypeClass;
 
-    // �� ���� �ֱ� ���� ����
+    // 한 번만 주기 위한 가드
     UPROPERTY(Transient)
     TSet<TWeakObjectPtr<AActor>> DamagedActors;
 
@@ -37,10 +47,10 @@ private:
     class UBoxComponent* PlaneBox;
 
     UPROPERTY(EditAnywhere)
-    float PlaneHalfThickness = 20.f; // OverlapPlaneOnce�� ���� �ǹ��� �β� HalfExtent
+    float PlaneHalfThickness = 20.f; // OverlapPlaneOnce와 동일 의미의 두께 HalfExtent
 
     UPROPERTY(VisibleAnywhere)
-    FVector2D PlaneHalfSize = FVector2D(50.f, 20.f); // X=HalfLen(����), Y=HalfWidth(��)
+    FVector2D PlaneHalfSize = FVector2D(50.f, 20.f); // X=HalfLen(진행), Y=HalfWidth(폭)
 
     float LifeSeconds = 1.0f;
 
@@ -59,7 +69,7 @@ private:
     UPROPERTY(Transient)
     class UNiagaraComponent* SpawnedFX;
 
-    // ScaleMultiplier �Ķ���� �̸�
+    // ScaleMultiplier 파라미터 이름
     FName ScaleMultiplierParamName = TEXT("User.ScaleMultiplier");
 
 // Sound Section

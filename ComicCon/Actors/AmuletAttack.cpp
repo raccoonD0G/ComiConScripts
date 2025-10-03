@@ -31,8 +31,12 @@ void AAmuletAttack::InitializeAttack(const FVector& InCenter, const FRotator& In
     // 1) 기준 길이 잡기
     constexpr float L0 = 10.0f;
 
-    // 2) 스케일 함수로 길이 스케일 계산
-    const float LengthScale = UMathLibraries::SuperlinearScale(InLength, L0, 1.3f, 0.7f);
+    // --- 0) 최소 길이 보정: InLength이 너무 짧으면 최소값으로 보정
+    const float EffectiveLength = FMath::Max(InLength, MinAttackLength);
+
+    // 2) 스케일 함수로 길이 스케일 계산 (보정된 길이로 계산하여
+    //    짧은 스윙도 스케일 보장이 되도록 함)
+    const float LengthScale = UMathLibraries::SuperlinearScale(EffectiveLength, L0, 1.3f, 0.7f);
 
     if (LengthScale > 5.0f)
     {
@@ -51,11 +55,15 @@ void AAmuletAttack::InitializeAttack(const FVector& InCenter, const FRotator& In
         }
     }
 
-    // 3) HalfExtent 계산 시 길이에 스케일 적용
+    // 3) HalfExtent 계산 시 길이에 스케일 및 최소값 적용
+    //    기존 로직은 (InLength * 0.5f) * LengthScale / 10.0f 인데,
+    //    우리는 EffectiveLength(보정된 전체 길이)를 사용합니다.
+    const float YHalf = FMath::Max(1.f, (EffectiveLength * 0.5f) * LengthScale / 10.0f);
+
     const FVector HalfExtent(
-        PlaneHalfThickness,                         // X: 두께 Half
-        FMath::Max(1.f, (InLength * 0.5f) * LengthScale / 10.0f), // Y: 진행방향 HalfLength (스케일 적용됨)
-        FMath::Max(1.f, InWidth * 0.5f)             // Z: 폭 Half
+        PlaneHalfThickness, // X: 두께 Half
+        YHalf,              // Y: 진행방향 HalfLength (스케일 + 최소값 적용됨)
+        FMath::Max(1.f, InWidth * 0.5f) // Z: 폭 Half
     );
 
     FRotator CorrectedRotation = InRotation;
@@ -77,7 +85,8 @@ void AAmuletAttack::InitializeAttack(const FVector& InCenter, const FRotator& In
         World->GetTimerManager().SetTimerForNextTick(FTimerDelegate::CreateWeakLambda(this, [this]()
             {
                 if (!IsValid(PlaneBox)) return;
-                PlaneBox->SetCollisionProfileName(TEXT("NoCollison"));
+                // 주의: collision profile 이름을 실제 프로젝트에 맞게 확인하세요.
+                PlaneBox->SetCollisionProfileName(TEXT("NoCollision"));
             })
         );
     }
@@ -90,10 +99,10 @@ void AAmuletAttack::InitializeAttack(const FVector& InCenter, const FRotator& In
         DrawDebugBox(GetWorld(), CenterFromStartFace, HalfExtent, Q, FColor::Cyan, false, 1.0f, 0, 2.f);
     }
 
-    // FX도 동일한 LengthScale 전달
-    SpawnOrUpdateFX(InCenter, FRotator(90, 90, 0), InLength * LengthScale, InWidth);
+    // FX도 동일한 EffectiveLength과 LengthScale을 전달 (최소 FX 길이 보장)
+    const float EffectiveFXLength = FMath::Max(EffectiveLength, MinFXLength);
+    SpawnOrUpdateFX(InCenter, FRotator(90, 90, 0), EffectiveFXLength * LengthScale, InWidth);
 }
-
 
 void AAmuletAttack::SpawnOrUpdateFX(const FVector& Center, const FRotator& Rotation, float InLength, float InWidth)
 {
@@ -128,11 +137,15 @@ void AAmuletAttack::SpawnOrUpdateFX(const FVector& Center, const FRotator& Rotat
         return;
     }
 
-    const float NormLength = InLength / 100.0f;
-    const float NormWidth = InWidth / 100.0f;
+    // InLength은 이미 InitializeAttack에서 보정 및 스케일 적용된 값(전체 길이 기준)
+    // FX에서 사용하는 정규화 길이도 최소값 보장이 되도록 MinFXLength을 보장했다면
+    // 여기서는 단순히 cm->m(또는 100으로 나누는 기존 방식을 따라) 변환.
+    const float NormLength = FMath::Max(InLength, MinFXLength) / 100.0f;
+    const float NormWidth = FMath::Max(InWidth, 1.0f) / 100.0f;
 
+    // 기존에는 Vec2(1.0f, NormLength) 를 썼는데,
+    // 필요한 경우 X/Y에 모두 스케일을 넣을 수 있으니 예시로 Y에 길이를 넣음.
     SpawnedFX->SetVariableVec2(ScaleMultiplierParamName, FVector2D(1.0f, NormLength));
-
 }
 
 void AAmuletAttack::OnPlaneBoxBeginOverlap(
