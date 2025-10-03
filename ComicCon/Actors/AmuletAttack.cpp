@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Actors/AmuletAttack.h"
@@ -28,10 +28,10 @@ AAmuletAttack::AAmuletAttack()
 
 void AAmuletAttack::InitializeAttack(const FVector& InCenter, const FRotator& InRotation, float InLength, float InWidth)
 {
-    // 1) ±âÁØ ±æÀÌ Àâ±â
+    // 1) ê¸°ì¤€ ê¸¸ì´ ìž¡ê¸°
     constexpr float L0 = 10.0f;
 
-    // 2) ½ºÄÉÀÏ ÇÔ¼ö·Î ±æÀÌ ½ºÄÉÀÏ °è»ê
+    // 2) ìŠ¤ì¼€ì¼ í•¨ìˆ˜ë¡œ ê¸¸ì´ ìŠ¤ì¼€ì¼ ê³„ì‚°
     const float LengthScale = UMathLibraries::SuperlinearScale(InLength, L0, 1.3f, 0.7f);
 
     if (LengthScale > 5.0f)
@@ -51,11 +51,11 @@ void AAmuletAttack::InitializeAttack(const FVector& InCenter, const FRotator& In
         }
     }
 
-    // 3) HalfExtent °è»ê ½Ã ±æÀÌ¿¡ ½ºÄÉÀÏ Àû¿ë
+    // 3) HalfExtent ê³„ì‚° ì‹œ ê¸¸ì´ì— ìŠ¤ì¼€ì¼ ì ìš©
     const FVector HalfExtent(
-        PlaneHalfThickness,                         // X: µÎ²² Half
-        FMath::Max(1.f, (InLength * 0.5f) * LengthScale / 10.0f), // Y: ÁøÇà¹æÇâ HalfLength (½ºÄÉÀÏ Àû¿ëµÊ)
-        FMath::Max(1.f, InWidth * 0.5f)             // Z: Æø Half
+        PlaneHalfThickness,                         // X: ë‘ê»˜ Half
+        FMath::Max(1.f, (InLength * 0.5f) * LengthScale / 10.0f), // Y: ì§„í–‰ë°©í–¥ HalfLength (ìŠ¤ì¼€ì¼ ì ìš©ë¨)
+        FMath::Max(1.f, InWidth * 0.5f)             // Z: í­ Half
     );
 
     FRotator CorrectedRotation = InRotation;
@@ -63,12 +63,12 @@ void AAmuletAttack::InitializeAttack(const FVector& InCenter, const FRotator& In
     SetActorLocation(InCenter);
     SetActorRotation(CorrectedRotation);
 
-    // ¹Ú½º Å©±â ¼¼ÆÃ
+    // ë°•ìŠ¤ í¬ê¸° ì„¸íŒ…
     PlaneBox->SetBoxExtent(HalfExtent, false);
     PlaneBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
     PlaneBox->SetGenerateOverlapEvents(true);
 
-    // -X ¸é À§Ä¡ º¸Á¤
+    // -X ë©´ ìœ„ì¹˜ ë³´ì •
     PlaneBox->SetRelativeLocation(FVector(+HalfExtent.X, 0, 0));
     PlaneBox->SetRelativeRotation(FRotator::ZeroRotator);
 
@@ -82,7 +82,7 @@ void AAmuletAttack::InitializeAttack(const FVector& InCenter, const FRotator& In
         );
     }
 
-    // µð¹ö±× ¹Ú½º
+    // ë””ë²„ê·¸ ë°•ìŠ¤
     if (bDoDebug)
     {
         const FQuat Q = CorrectedRotation.Quaternion();
@@ -90,7 +90,7 @@ void AAmuletAttack::InitializeAttack(const FVector& InCenter, const FRotator& In
         DrawDebugBox(GetWorld(), CenterFromStartFace, HalfExtent, Q, FColor::Cyan, false, 1.0f, 0, 2.f);
     }
 
-    // FXµµ µ¿ÀÏÇÑ LengthScale Àü´Þ
+    // FXë„ ë™ì¼í•œ LengthScale ì „ë‹¬
     SpawnOrUpdateFX(InCenter, FRotator(90, 90, 0), InLength * LengthScale, InWidth);
 }
 
@@ -103,14 +103,14 @@ void AAmuletAttack::SpawnOrUpdateFX(const FVector& Center, const FRotator& Rotat
         return;
     }
 
-    // ±âÁ¸ FX ÀÖ´Ù¸é Á¦°Å
+    // ê¸°ì¡´ FX ìžˆë‹¤ë©´ ì œê±°
     if (SpawnedFX && !SpawnedFX->IsPendingKill())
     {
         SpawnedFX->DestroyComponent();
         SpawnedFX = nullptr;
     }
 
-    // ½ºÆù
+    // ìŠ¤í°
     SpawnedFX = UNiagaraFunctionLibrary::SpawnSystemAttached(
         SwingPlaneFX,
         RootComponent,
@@ -145,10 +145,10 @@ void AAmuletAttack::OnPlaneBoxBeginOverlap(
 {
     if (!OtherActor || OtherActor == this) return;
 
-    // °°Àº ¾×ÅÍ¿¡ Áßº¹ µ¥¹ÌÁö ¹æÁö (¿øÇÏ¸é Á¦°Å)
+    // ê°™ì€ ì•¡í„°ì— ì¤‘ë³µ ë°ë¯¸ì§€ ë°©ì§€ (ì›í•˜ë©´ ì œê±°)
     if (DamagedActors.Contains(OtherActor)) return;
 
-    // ÀÎ½ºÆ¼°ÔÀÌÅÍ ÄÁÆ®·Ñ·¯(°¡ÇØÀÚ)¸¦ ÀûÀýÈ÷ °áÁ¤
+    // ì¸ìŠ¤í‹°ê²Œì´í„° ì»¨íŠ¸ë¡¤ëŸ¬(ê°€í•´ìž)ë¥¼ ì ì ˆížˆ ê²°ì •
     AController* InstigatorController =
         GetInstigatorController() ? GetInstigatorController()
         : (GetOwner() ? GetOwner()->GetInstigatorController() : nullptr);
