@@ -67,7 +67,7 @@ void UHandPoseClassifierComponent::ApplyEMA(TArray<FHandSample>& U) const
 {
     if (U.Num() == 0) return;
     FVector2D l = U[0].L, r = U[0].R, c = U[0].C;
-    constexpr double Alpha = 0.5; // 기존 코드 유지
+    constexpr double Alpha = 1.0f; // 기존 코드 유지
     for (int i = 0; i < U.Num(); ++i)
     {
         l = (1 - Alpha) * l + Alpha * U[i].L;

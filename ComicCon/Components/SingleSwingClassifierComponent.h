@@ -6,6 +6,67 @@
 #include "Components/HandPoseClassifierComponent.h"
 #include "SingleSwingClassifierComponent.generated.h"
 
+
+// 맨 위 쪽
+DECLARE_LOG_CATEGORY_EXTERN(LogSingleSwing, Log, All);
+
+UENUM()
+enum class EExitCause : uint8
+{
+    LowSpeed,
+    DirectionBreak,
+    Unknown
+};
+
+USTRUCT()
+struct FSingleSwingTrace
+{
+    GENERATED_BODY()
+
+    // 타임라인/윈도우
+    double UseSec = 0.0;
+    int32 NumSnaps = 0;
+    int32 NumU = 0;
+
+    // 손/인물
+    bool bRight = false;
+    int32 PersonEnter = -1;
+    int32 PersonExit = -1;
+
+    // 1) 변위(왕복 대비) 통과 여부(내부 판단만 알 수 있으면 bool만)
+    bool bPassMinDisp = false;
+    double MaxDeviationPx = 0.0;   // 가능하면 PassesMinDisplacementPx 내부에서 받아오기
+    double PathLenPx = 0.0;        // 가능하면 Calc 시점에 채우기
+    double MinDispThresholdPx = 0.0;
+
+    // 2) 속도 메트릭
+    double AvgSpeedPx = 0.0;
+    double PeakSpeedPx = 0.0;
+    double MinAvgSpeedPx = 0.0;
+    double MinPeakSpeedPx = 0.0;
+
+    // 3) 속도 시퀀스 & 구간
+    double EnterSpeedPx = 0.0;
+    int32  HoldFast = 0;
+    double ExitSpeedPx = 0.0;
+    int32  HoldStill = 0;
+
+    int32 IEnter = -1;
+    int32 IExitLow = -1;
+    int32 IBreak = -1;
+    int32 IExit = -1;
+    EExitCause ExitCause = EExitCause::Unknown;
+
+    // 매핑/시간
+    int32 EnterSnapIdx = -1;
+    int32 ExitSnapIdx = -1;
+    uint64 LocalNowMs = 0;
+    uint64 SenderNowMs = 0;
+
+    // 디버그 스위치
+    bool bEnabled = true;
+};
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FiveParams(FOnSingleSwingDetected, TArray<FTimedPoseSnapshot>, Snaps, TArray<int32>, PersonIdxOf, EHandSide, InHandSide, int32, EnterIdx, int32, ExitIdx);
 
 /**
@@ -32,33 +93,11 @@ private:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pose|Swing", meta = (AllowPrivateAccess = "true"))
     float SingleSwingRecentSeconds = 3.0f;
 
-    /*
-    // 속도 임계(어깨폭/초).
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pose|Swing", meta = (AllowPrivateAccess = "true"))
-    double MinPeakSpeedNorm = 0.0;
+    double HoldFast = 0.05;     // 시작 속도가 유지돼야 하는 최소 시간 (초)
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pose|Swing", meta = (AllowPrivateAccess = "true"))
-    double MinAvgSpeedNorm = 0.0;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pose|Swing", meta = (AllowPrivateAccess = "true"))
-    double MinDisplacementNorm = 0.1; // 어깨폭 대비 최소 이동 거리 (ex. 0.6~1.0 추천)
-
-    UPROPERTY(EditAnywhere, Category = "Pose|Swing")
-    float DirectionBreakMinSpeedNorm = 0.0f;      // 방향 판정을 위한 최소 정규화 속도
-
-    // Swing Detection Thresholds
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pose|Swing", meta = (AllowPrivateAccess = "true"))
-    double EnterSpeed = 4.0f;   // 스윙 시작 속도 임계 (정규화)
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pose|Swing", meta = (AllowPrivateAccess = "true"))
-    double ExitSpeed = 3.0f;    // 스윙 종료 속도 임계 (정규화)
-    */
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pose|Swing", meta = (AllowPrivateAccess = "true"))
-    double HoldFast = 0.0;     // 시작 속도가 유지돼야 하는 최소 시간 (초)
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pose|Swing", meta = (AllowPrivateAccess = "true"))
-    double HoldStill = 0.05;    // 종료 속도가 유지돼야 하는 최소 시간 (초)
+    double HoldStill = 0.1;    // 종료 속도가 유지돼야 하는 최소 시간 (초)
 
     UPROPERTY(EditAnywhere, Category = "Pose|Swing")
     float DirectionBreakAngleDeg = 45.f;          // 방향 급변으로 볼 최소 각도(도)
@@ -87,6 +126,9 @@ private:
     // 방향 급변 판정 시 최소 속도(px/sec)
     UPROPERTY(EditAnywhere, Category = "Pose|Swing")
     double DirectionBreakMinSpeedPx = 0.0;
+
+    UPROPERTY(EditAnywhere, Category = "Debug")
+    bool bLogSingleSwingReasons = true;
 
 private:
     /// <brief>쿨다운 타임아웃이 남아있는지 확인합니다.</brief>
@@ -124,29 +166,6 @@ private:
     /// <details>0 방지를 위해 KINDA_SMALL_NUMBER로 클램프 후 평균을 취합니다.</details>
     bool ComputeMeanShoulderWidth(const TArray<FHandSample>& U, double& OutMeanSW) const;
 
-    /// <brief>선택 손의 시작-끝 변위가 최소 요구치를 만족하는지 검사합니다.</brief>
-    /// <param name="U">균일 시계열.</param>
-    /// <param name="MeanSW">평균 어깨폭.</param>
-    /// <return>요건 만족 시 true.</return>
-    /// <details>정규화 변위가 MinDisplacementNorm 이상이어야 합니다.</details>
-    // bool PassesMinDisplacement(const TArray<FHandSample>& U, double MeanSW) const;
-
-    /// <brief>프레임별 정규화 속도 시퀀스를 생성합니다.</brief>
-    /// <param name="U">균일 시계열.</param>
-    /// <param name="MeanSW">평균 어깨폭.</param>
-    /// <param name="OutSpeedNorm">정규화 속도 시퀀스.</param>
-    /// <return>성공 시 true.</return>
-    /// <details>프레임 차분 길이 / KFixedDt / MeanSW 로 계산합니다.</details>
-    // bool BuildSpeedNorm(const TArray<FHandSample>& U, double MeanSW, TArray<double>& OutSpeedNorm) const;
-
-    /// <brief>속도 시퀀스에서 스윙의 진입/종료 인덱스를 탐색합니다.</brief>
-    /// <param name="SpeedNorm">정규화 속도 시퀀스.</param>
-    /// <param name="OutEnterIdx">진입 인덱스.</param>
-    /// <param name="OutExitIdx">종료 인덱스.</param>
-    /// <return>둘 다 찾으면 true.</return>
-    /// <details>EnterSpeed/HoldFast, ExitSpeed/HoldStill 임계-홀드 조건으로 FindRun을 2회 호출합니다.</details>
-    // bool FindSwingWindow(const TArray<double>& SpeedNorm, int& OutEnterIdx, int& OutExitIdx) const;
-
     /// <brief>U 인덱스(iEnterAfter/iExitAfter)를 원본 스냅샷 인덱스로 매핑합니다.</brief>
     /// <param name="Snaps">스냅샷 포인터 배열.</param>
     /// <param name="U">균일 시계열.</param>
@@ -174,19 +193,6 @@ private:
     /// <return>없음.</return>
     /// <details>값 복사 후 OnSingleSwingDetected 브로드캐스트, 쿨다운 갱신 및 버퍼 리셋.</details>
     void BroadcastAndFinalize(const TArray<const FTimedPoseSnapshot*>& Snaps, const TArray<int32>& PersonIdxOf, int EnterSnapIdx, int ExitSnapIdx);
-
-    /// <brief>스윙 진입 직후의 기준 방향과 큰 각도로 어긋나는 지점을 종료로 간주합니다.</brief>
-    /// <param name="U">균일 시계열(30Hz 등간격).</param>
-    /// <param name="MeanSW">평균 어깨폭(정규화 분모).</param>
-    /// <param name="StartIdx">탐색 시작 U 인덱스(보통 iEnter+1 혹은 iEnterAfter).</param>
-    /// <param name="OutBreakIdx">급변이 검출된 U 인덱스.</param>
-    /// <return>검출 시 true.</return>
-    /// <details>
-    /// 현재 설정된 CurrentHandSide의 손을 사용합니다.
-    /// 기준 방향은 StartIdx부터 2~4프레임의 유효(속도≥DirectionBreakMinSpeedNorm) 이동 벡터 평균으로 추정하고,
-    /// 이후 프레임에서 기준과의 각도가 DirectionBreakAngleDeg 이상인 상태가 DirectionBreakHoldSec 이상 연속되면 종료로 반환합니다.
-    /// </details>
-    // bool FindDirectionBreakIndex(const TArray<FHandSample>& U, double MeanSW, int StartIdx, int& OutBreakIdx) const;
 
     bool PassesMinDisplacementPx(const TArray<FHandSample>& U) const;
 

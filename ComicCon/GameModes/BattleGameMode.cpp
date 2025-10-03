@@ -234,7 +234,7 @@ void ABattleGameMode::RecordBattleEntry()
     const FString Timestamp = Now.ToString(TEXT("%Y-%m-%d %H:%M"));
     SaveObj->BattleTimestamps.Add(Timestamp);
 
-    const int32 MaxEntries = 1000;
+    const int32 MaxEntries = 1000000;
     if (SaveObj->BattleTimestamps.Num() > MaxEntries)
     {
         const int32 Excess = SaveObj->BattleTimestamps.Num() - MaxEntries;

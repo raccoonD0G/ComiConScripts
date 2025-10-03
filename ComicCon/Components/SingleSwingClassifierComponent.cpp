@@ -7,24 +7,55 @@
 #include "Utilities/MathLibraries.h"
 #include "Global/UdpStruct.h"
 
+// 최상단 한 번만
+DEFINE_LOG_CATEGORY(LogSingleSwing);
+
+static void CalcDispStats(const TArray<FHandSample>& U, bool bRight,
+    double& OutMaxDevPx, double& OutPathLenPx)
+{
+    OutMaxDevPx = 0.0;
+    OutPathLenPx = 0.0;
+    if (U.Num() < 2) return;
+
+    const FVector2D Base = bRight ? U[0].R : U[0].L;
+    FVector2D Prev = Base;
+
+    for (int32 i = 1; i < U.Num(); ++i)
+    {
+        const FVector2D Cur = bRight ? U[i].R : U[i].L;
+
+        OutMaxDevPx = FMath::Max(OutMaxDevPx, FVector2D::Distance(Base, Cur));
+        OutPathLenPx += FVector2D::Distance(Prev, Cur);
+
+        Prev = Cur;
+    }
+}
+
 void USingleSwingClassifierComponent::Detect()
 {
     Super::Detect();
-
     if (WindowBuffer.Num() == 0) return;
+
+    FSingleSwingTrace Tr;
+    Tr.bEnabled = bLogSingleSwingReasons;
 
     const uint64 SenderNow = NowMsFromReceiver();
     if (SenderNow == 0) return;
+    Tr.SenderNowMs = SenderNow;
 
     const uint64 LocalNow = UMathLibraries::LocalNowMs();
+    Tr.LocalNowMs = LocalNow;
     if (IsCooldownActive(LocalNow)) return;
 
-    // 최근 구간 계산 및 스냅 수집
+    // 최근 구간 계산
     constexpr double kMinUseSec = 0.2;
     const double UseSec = FMath::Clamp((double)SingleSwingRecentSeconds, kMinUseSec, (double)WindowSeconds);
+    Tr.UseSec = UseSec;
 
+    // 스냅 수집
     TArray<const FTimedPoseSnapshot*> Snaps;
     if (!CollectRecentSnaps(SenderNow, UseSec, Snaps)) return;
+    Tr.NumSnaps = Snaps.Num();
 
     // 샘플 빌드
     TArray<FHandSample> Samples;
@@ -33,70 +64,132 @@ void USingleSwingClassifierComponent::Detect()
     // 리샘플 + 스무딩
     TArray<FHandSample> U;
     if (!ResampleAndSmooth(Samples, U)) return;
+    Tr.NumU = U.Num();
 
-    // ============================
-    // 픽셀 기반 스윙 판정 시작
-    // ============================
+    // 현재 손 기준(왼손/오른손)
+    const bool bRight = (GetCurrentHandSide() == EHandSide::Right);
+    Tr.bRight = bRight;
 
-    // (1) 최소 변위(px) 체크: 왕복 대비로 최대 편차/누적경로를 내부에서 확인
-    if (!PassesMinDisplacementPx(U)) return;
+    // 변위/경로 통계 계산
+    CalcDispStats(U, bRight, Tr.MaxDeviationPx, Tr.PathLenPx);
 
-    // (2) 속도 통과(px/sec): 평균/피크 임계
+    // (1) 최소 변위(px)
+    Tr.MinDispThresholdPx = MinDisplacementPx; // 현재 세팅된 임계치
+    Tr.bPassMinDisp = PassesMinDisplacementPx(U);
+    if (!Tr.bPassMinDisp) return;
+
+    // (2) 속도 메트릭
     const FHandMetrics ML = CalcMetricsPx(U, /*bLeft=*/true);
     const FHandMetrics MR = CalcMetricsPx(U, /*bLeft=*/false);
-    const FHandMetrics& M = (GetCurrentHandSide() == EHandSide::Right) ? MR : ML;
+    const FHandMetrics& M = bRight ? MR : ML;
+
+    Tr.AvgSpeedPx = M.Avg;
+    Tr.PeakSpeedPx = M.Peak;
+    Tr.MinAvgSpeedPx = MinAvgSpeedPx;
+    Tr.MinPeakSpeedPx = MinPeakSpeedPx;
+    // 선택적으로: Tr.PathLenPx = M.PathLen;  // 필드가 있다면
 
     const bool bPassSpeed = ((M.Avg >= MinAvgSpeedPx) || (M.Peak >= MinPeakSpeedPx));
     if (!bPassSpeed) return;
 
-    // 스냅별 대표 인물 인덱스 (브로드캐스트용)
+    // 스냅별 대표 인물 인덱스
     TArray<int32> PersonIdxOf;
     BuildPersonIndexTimeline(Snaps, PersonIdxOf);
 
-    // (3) 속도 시퀀스(px/sec) 생성
+    // (3) 속도 시퀀스
     TArray<double> SpeedPx;
     if (!BuildSpeedPx(U, SpeedPx)) return;
 
-    // (4) 진입(고속 유지) 찾기
+    // (4) 진입
+    Tr.EnterSpeedPx = EnterSpeedPx;
+    Tr.HoldFast = HoldFast;
     int32 iEnter = -1;
     if (!FindRun(SpeedPx, /*StartIdx*/ 1, EnterSpeedPx, HoldFast, /*above*/ true, iEnter))
         return;
+    Tr.IEnter = iEnter;
 
-    // (5) 종료 후보들
-    // 5-1) 저속 종료(px/sec)
+    // (5) 종료 후보
+    Tr.ExitSpeedPx = ExitSpeedPx;
+    Tr.HoldStill = HoldStill;
+
     int32 iExitLow = -1;
-    FindRun(SpeedPx, FMath::Max(1, iEnter + 1), ExitSpeedPx, HoldStill, /*above*/ false, iExitLow); // 실패해도 계속
+    FindRun(SpeedPx, FMath::Max(1, iEnter + 1), ExitSpeedPx, HoldStill, /*above*/ false, iExitLow);
+    Tr.IExitLow = iExitLow;
 
-    // 5-2) 방향 급변 종료(px/sec 하한 포함)
     int32 iBreak = -1;
-    FindDirectionBreakIndexPx(U, /*StartIdx=*/ iEnter + 1, iBreak); // 실패해도 계속
+    FindDirectionBreakIndexPx(U, /*StartIdx=*/ iEnter + 1, iBreak);
+    Tr.IBreak = iBreak;
 
-    // (6) OR: 더 이른 쪽을 종료로 선택
+    // (6) 종료 선택
     int32 iExit = -1;
-    if (iExitLow >= 0 && iBreak >= 0)
+    if (iExitLow >= 0 && iBreak >= 0) {
         iExit = FMath::Min(iExitLow, iBreak);
-    else if (iExitLow >= 0)
+        Tr.ExitCause = (iExit == iExitLow) ? EExitCause::LowSpeed : EExitCause::DirectionBreak;
+    }
+    else if (iExitLow >= 0) {
         iExit = iExitLow;
-    else if (iBreak >= 0)
+        Tr.ExitCause = EExitCause::LowSpeed;
+    }
+    else if (iBreak >= 0) {
         iExit = iBreak;
-    else
-        return; // 둘 다 못 찾으면 실패
+        Tr.ExitCause = EExitCause::DirectionBreak;
+    }
+    else {
+        return;
+    }
+    Tr.IExit = iExit;
 
     // (7) 경계 보정
     const int32 iEnterAfter = FMath::Clamp(iEnter + 1, 0, U.Num() - 1);
     const int32 iExitAfter = FMath::Clamp(iExit + 1, 0, U.Num() - 1);
 
-    // U → 원본 스냅 인덱스 매핑
+    // (U -> 스냅 인덱스 매핑)
     int32 EnterSnapIdx = -1, ExitSnapIdx = -1;
     if (!MapWindowToSnaps(Snaps, U, iEnterAfter, iExitAfter, EnterSnapIdx, ExitSnapIdx)) return;
+    Tr.EnterSnapIdx = EnterSnapIdx;
+    Tr.ExitSnapIdx = ExitSnapIdx;
+
+    // 사람 인덱스 (있으면 기록)
+    if (PersonIdxOf.IsValidIndex(EnterSnapIdx)) Tr.PersonEnter = PersonIdxOf[EnterSnapIdx];
+    if (PersonIdxOf.IsValidIndex(ExitSnapIdx))  Tr.PersonExit = PersonIdxOf[ExitSnapIdx];
 
     // (8) 브로드캐스트 & 정리
     BroadcastAndFinalize(Snaps, PersonIdxOf, EnterSnapIdx, ExitSnapIdx);
 
     LastSingleSwingLoggedMs = LocalNow;
     WindowBuffer.Reset();
-}
 
+    // --- 감지 성공 로그 출력 ---
+    if (Tr.bEnabled) 
+    {
+        const TCHAR* ExitCauseStr =
+            (Tr.ExitCause == EExitCause::LowSpeed) ? TEXT("LowSpeed") :
+            (Tr.ExitCause == EExitCause::DirectionBreak) ? TEXT("DirectionBreak") :
+            TEXT("Unknown");
+
+        UE_LOG(LogSingleSwing, Log,
+            TEXT("[SingleSwing DETECTED] side=%s useSec=%.3f snaps=%d U=%d  ")
+            TEXT("| disp_ok=%s (min>=%.1fpx, maxDev=%.1fpx, path=%.1fpx)  ")
+            TEXT("| speed avg=%.1f(>=%.1f? %s), peak=%.1f(>=%.1f? %s)  ")
+            TEXT("| enter idx=%d (thr=%.1f hold=%d)  exit idx=%d by=%s (thr=%.1f hold=%d)  ")
+            TEXT("| snap enter=%d exit=%d person=%d->%d  ")
+            TEXT("| t(local)=%llu t(sender)=%llu"),
+            Tr.bRight ? TEXT("Right") : TEXT("Left"),
+            Tr.UseSec, Tr.NumSnaps, Tr.NumU,
+            Tr.bPassMinDisp ? TEXT("YES") : TEXT("NO"),
+            Tr.MinDispThresholdPx,
+            Tr.MaxDeviationPx,        // ← 여기에 포함
+            Tr.PathLenPx,             // ← 여기에 포함
+            Tr.AvgSpeedPx, Tr.MinAvgSpeedPx, (Tr.AvgSpeedPx >= Tr.MinAvgSpeedPx ? TEXT("Y") : TEXT("N")),
+            Tr.PeakSpeedPx, Tr.MinPeakSpeedPx, (Tr.PeakSpeedPx >= Tr.MinPeakSpeedPx ? TEXT("Y") : TEXT("N")),
+            Tr.IEnter, Tr.EnterSpeedPx, Tr.HoldFast,
+            Tr.IExit, ExitCauseStr, Tr.ExitSpeedPx, Tr.HoldStill,
+            Tr.EnterSnapIdx, Tr.ExitSnapIdx, Tr.PersonEnter, Tr.PersonExit,
+            Tr.LocalNowMs, Tr.SenderNowMs
+        );
+    }
+
+}
 
 bool USingleSwingClassifierComponent::IsCooldownActive(uint64 LocalNow) const
 {
@@ -189,40 +282,6 @@ bool USingleSwingClassifierComponent::ComputeMeanShoulderWidth(const TArray<FHan
     return (OutMeanSW > KINDA_SMALL_NUMBER);
 }
 
-/*
-bool USingleSwingClassifierComponent::PassesMinDisplacement(const TArray<FHandSample>& U, double MeanSW) const
-{
-    const FVector2D FirstPos = WristAt(U, 0);
-    const FVector2D LastPos = WristAt(U, U.Num() - 1);
-    const double Displacement = (LastPos - FirstPos).Size() / MeanSW;
-    return (Displacement >= MinDisplacementNorm);
-}
-*/
-
-/*
-bool USingleSwingClassifierComponent::BuildSpeedNorm(const TArray<FHandSample>& U, double MeanSW, TArray<double>& OutSpeedNorm) const
-{
-    if (U.Num() < 2) return false;
-    OutSpeedNorm.Init(0.0, U.Num());
-    for (int i = 1; i < U.Num(); ++i)
-    {
-        const FVector2D d = WristAt(U, i) - WristAt(U, i - 1);
-        OutSpeedNorm[i] = (d.Size() / KFixedDt) / MeanSW;
-    }
-    return true;
-}
-*/
-
-/*
-bool USingleSwingClassifierComponent::FindSwingWindow(const TArray<double>& SpeedNorm, int& OutEnterIdx, int& OutExitIdx) const
-{
-    OutEnterIdx = -1; OutExitIdx = -1;
-    if (!FindRun(SpeedNorm, 1, EnterSpeed, HoldFast, true, OutEnterIdx)) return false;
-    if (!FindRun(SpeedNorm, FMath::Max(1, OutEnterIdx + 1), ExitSpeed, HoldStill, false, OutExitIdx)) return false;
-    return true;
-}
-*/
-
 bool USingleSwingClassifierComponent::MapWindowToSnaps(const TArray<const FTimedPoseSnapshot*>& Snaps, const TArray<FHandSample>& U, int iEnterAfter, int iExitAfter, int& OutEnterSnapIdx, int& OutExitSnapIdx) const
 {
     if (Snaps.Num() == 0) return false;
@@ -257,68 +316,6 @@ void USingleSwingClassifierComponent::BroadcastAndFinalize(const TArray<const FT
 
     OnSingleSwingDetected.Broadcast(SnapsValue, PersonIdxOf, GetCurrentHandSide(), EnterSnapIdx, ExitSnapIdx);
 }
-
-/*
-bool USingleSwingClassifierComponent::FindDirectionBreakIndex(const TArray<FHandSample>& U, double MeanSW, int StartIdx, int& OutBreakIdx) const
-{
-    OutBreakIdx = -1;
-    if (U.Num() < 2 || StartIdx < 1 || StartIdx >= U.Num() - 1 || MeanSW <= KINDA_SMALL_NUMBER)
-        return false;
-
-    const bool bRightHand = (GetCurrentHandSide() == EHandSide::Right);
-
-    const double cosThr = FMath::Cos(FMath::DegreesToRadians((double)DirectionBreakAngleDeg));
-    const int holdFrames = FMath::Max(1, (int)FMath::RoundToInt(DirectionBreakHoldSec / KFixedDt));
-
-    // 1) 기준 방향: StartIdx부터 최대 4프레임 동안의 유효 이동 벡터 평균
-    FVector2D refSum(0, 0);
-    int refCnt = 0;
-    const int refEnd = FMath::Min(StartIdx + 4, U.Num() - 1);
-    for (int i = StartIdx; i <= refEnd; ++i)
-    {
-        const FVector2D d = (bRightHand ? U[i].R : U[i].L) - (bRightHand ? U[i - 1].R : U[i - 1].L);
-        const double vNorm = (d.Size() / KFixedDt) / MeanSW;
-        if (vNorm >= (double)DirectionBreakMinSpeedNorm)
-        {
-            refSum += d;
-            ++refCnt;
-        }
-    }
-    if (refCnt == 0) return false;
-    const FVector2D refDir = refSum.GetSafeNormal();
-    if (refDir.IsNearlyZero()) return false;
-
-    // 2) 급변 탐지: 기준과의 각도가 임계 이상인 프레임이 holdFrames 연속
-    int consec = 0;
-    for (int i = StartIdx + 1; i < U.Num(); ++i)
-    {
-        const FVector2D d = (bRightHand ? U[i].R : U[i].L) - (bRightHand ? U[i - 1].R : U[i - 1].L);
-        const double vNorm = (d.Size() / KFixedDt) / MeanSW;
-        if (vNorm < (double)DirectionBreakMinSpeedNorm)
-        {
-            consec = 0; // 너무 느리면 방향 판정 보류
-            continue;
-        }
-
-        const FVector2D dir = d.GetSafeNormal();
-        const double cs = FVector2D::DotProduct(dir, refDir);
-
-        if (cs <= cosThr)
-        {
-            if (++consec >= holdFrames)
-            {
-                OutBreakIdx = i;
-                return true;
-            }
-        }
-        else
-        {
-            consec = 0;
-        }
-    }
-    return false;
-}
-*/
 
 bool USingleSwingClassifierComponent::PassesMinDisplacementPx(const TArray<FHandSample>& U) const
 {
