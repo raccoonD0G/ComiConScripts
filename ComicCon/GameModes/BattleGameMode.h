@@ -25,7 +25,8 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
-	FTimerHandle InitRetryTimer;
+        FTimerHandle InitRetryTimer;
+        FTimerHandle ResultLevelTimerHandle;
 
 	UFUNCTION()
 	void Init();
