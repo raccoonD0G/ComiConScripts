@@ -44,6 +44,8 @@ void ABattleGameMode::Init()
 
 void ABattleGameMode::StartMatch()
 {
+    bBlockIncomingDamage = false;
+
     if (UGameInstance* GI = GetGameInstance())
     {
         if (auto* Rec = GI->GetSubsystem<URecordingSubsystem>())
@@ -55,6 +57,8 @@ void ABattleGameMode::StartMatch()
 
 void ABattleGameMode::EndMatch()
 {
+    bBlockIncomingDamage = true;
+
     SaveScore();
 
     FString VideoPath;
@@ -126,16 +130,36 @@ void ABattleGameMode::EndMatch()
     if (!BW->IsInViewport()) BW->AddToViewport(999);
 
     // 2초 뒤 ResultMap 전환
-    FTimerHandle TimerHandle_OpenLevel;
-    GetWorld()->GetTimerManager().SetTimer(
-        TimerHandle_OpenLevel,
-        FTimerDelegate::CreateLambda([this]()
-            {
-                UGameplayStatics::OpenLevel(this, FName(TEXT("ResultMap")));
-            }),
-        4.0f,
-        false
-    );
+    if (UWorld* World = GetWorld())
+    {
+        FTimerManager& TimerManager = World->GetTimerManager();
+
+        // 이전 구현에서는 EndMatch 가 여러 번 호출될 때마다 새로운 타이머를 만들고, 람다 캡쳐에
+        // 살아있지 않은 this 를 그대로 넘겨 ResultMap 으로 전환하는 동안 파괴된 GameMode 를
+        // 역참조하여 충돌이 발생했다. 타이머 핸들을 멤버로 유지하고 약한 포인터로 self 를 캡쳐해
+        // 중복 무장과 파괴된 객체 접근을 모두 막는다.
+        if (!TimerManager.IsTimerActive(ResultLevelTimerHandle))
+        {
+            TWeakObjectPtr<ABattleGameMode> WeakThis = this;
+            TimerManager.SetTimer(
+                ResultLevelTimerHandle,
+                FTimerDelegate::CreateLambda([WeakThis]()
+                    {
+                        if (!WeakThis.IsValid())
+                        {
+                            return;
+                        }
+
+                        if (UWorld* LocalWorld = WeakThis->GetWorld())
+                        {
+                            UGameplayStatics::OpenLevel(LocalWorld, FName(TEXT("ResultMap")));
+                        }
+                    }),
+                4.0f,
+                false
+            );
+        }
+    }
 
     if (UGameInstance* GI = GetGameInstance())
     {
