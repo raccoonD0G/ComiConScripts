@@ -44,6 +44,8 @@ void ABattleGameMode::Init()
 
 void ABattleGameMode::StartMatch()
 {
+    bBlockIncomingDamage = false;
+
     if (UGameInstance* GI = GetGameInstance())
     {
         if (auto* Rec = GI->GetSubsystem<URecordingSubsystem>())
@@ -55,6 +57,8 @@ void ABattleGameMode::StartMatch()
 
 void ABattleGameMode::EndMatch()
 {
+    bBlockIncomingDamage = true;
+
     SaveScore();
 
     FString VideoPath;

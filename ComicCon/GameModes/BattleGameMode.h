@@ -27,9 +27,14 @@ protected:
 private:
         FTimerHandle InitRetryTimer;
         FTimerHandle ResultLevelTimerHandle;
+        uint8 bBlockIncomingDamage : 1 = false;
 
-	UFUNCTION()
-	void Init();
+        UFUNCTION()
+        void Init();
+
+public:
+        UFUNCTION(BlueprintPure, Category = "Battle")
+        FORCEINLINE bool ShouldBlockDamage() const { return bBlockIncomingDamage; }
 
 // Score Section
 private:

@@ -48,14 +48,14 @@ void AViewPlayer::BeginPlay()
     check(AmuletClass);
     check(WebcamReceiverClass);
 
-    // --- MirroredPlayer ½ºÆù (½ºÄÉÀÏ Àû¿ë) ---
+    // --- MirroredPlayer ìŠ¤í° (ìŠ¤ì¼€ì¼ ì ìš©) ---
     {
         const FVector MirroredScale(ViewScale);
         FTransform MirroredPlayerTF = FTransform(FRotator(), FVector(0, 0, -100), MirroredScale);
         MirroredPlayer = GetWorld()->SpawnActor<AMirroredPlayer>(MirroredPlayerClass, MirroredPlayerTF, Params);
     }
 
-    // --- WebcamReceiver ½ºÆù (±âº»°ª * ViewScale) ---
+    // --- WebcamReceiver ìŠ¤í° (ê¸°ë³¸ê°’ * ViewScale) ---
     {
         const FRotator WebcamRot(0.0f, 0.0f, 0.0f);
         const FVector WebcamLoc(0, 0, -100);
@@ -75,7 +75,7 @@ void AViewPlayer::BeginPlay()
         WebcamReceiver->SetActorTransform(WebcamReceiverTF, false, nullptr, ETeleportType::ResetPhysics);
     }
 
-    // --- ºÎÀû(Amulet)Àº ±âÁ¸ ±×´ë·Î ---
+    // --- ë¶€ì (Amulet)ì€ ê¸°ì¡´ ê·¸ëŒ€ë¡œ ---
     {
         FTransform AmuletTF;
         AmuletLeft = GetWorld()->SpawnActorDeferred<AAmulet>(AmuletClass, AmuletTF);
@@ -116,6 +116,13 @@ void AViewPlayer::Tick(float DeltaSeconds)
 
 void AViewPlayer::GetAttacked(int32 InAttackPower)
 {
+    ABattleGameMode* BattleGameMode = Cast<ABattleGameMode>(GetWorld()->GetAuthGameMode());
+
+    if (BattleGameMode && BattleGameMode->ShouldBlockDamage())
+    {
+        return;
+    }
+
     if (CurrentHealth <= 0) return;
 
     CurrentHealth = FMath::Clamp(CurrentHealth - InAttackPower, 0, MaxHealth);
@@ -128,8 +135,6 @@ void AViewPlayer::GetAttacked(int32 InAttackPower)
     
     if (CurrentHealth == 0)
     {
-        ABattleGameMode* BattleGameMode = Cast<ABattleGameMode>(GetWorld()->GetAuthGameMode());
-
         if (BattleGameMode)
         {
             BattleGameMode->EndMatch();
@@ -143,7 +148,7 @@ void AViewPlayer::ShowDamagedEffect()
 
     const FVector Offset(NiagaraXOffset, 0.f, 0.f);
 
-    // ¸Å¹ø »õ ÄÄÆ÷³ÍÆ® »ı¼º (ÀÚµ¿ ÆÄ±«)
+    // ë§¤ë²ˆ ìƒˆ ì»´í¬ë„ŒíŠ¸ ìƒì„± (ìë™ íŒŒê´´)
     UNiagaraComponent* Comp = UNiagaraFunctionLibrary::SpawnSystemAttached(
         DamagedEffect,
         SpringArmComponent,
