@@ -331,19 +331,19 @@ void ULobbyWidget::NativeConstruct()
     }
     if (Brightness)
     {
-        Brightness->OnTextCommitted.AddDynamic(this, &ULobbyWidget::OnValueCommittedIntensityFloor);
+        Brightness->OnTextCommitted.AddDynamic(this, &ULobbyWidget::OnValueCommittedBrightness);
     }
     if (Contrast)
     {
-        Contrast->OnTextCommitted.AddDynamic(this, &ULobbyWidget::OnValueCommittedIntensityFloor);
+        Contrast->OnTextCommitted.AddDynamic(this, &ULobbyWidget::OnValueCommittedContrast);
     }
     if (Saturation)
     {
-        Saturation->OnTextCommitted.AddDynamic(this, &ULobbyWidget::OnValueCommittedIntensityFloor);
+        Saturation->OnTextCommitted.AddDynamic(this, &ULobbyWidget::OnValueCommittedSaturation);
     }
     if (HueShift)
     {
-        HueShift->OnTextCommitted.AddDynamic(this, &ULobbyWidget::OnValueCommittedIntensityFloor);
+        HueShift->OnTextCommitted.AddDynamic(this, &ULobbyWidget::OnValueCommittedHueShift);
     }
 
     if (LumaMaskSlider)
