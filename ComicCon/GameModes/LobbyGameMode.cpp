@@ -30,14 +30,5 @@ void ALobbyGameMode::Init()
 
 	SaveObj->CurrentHunterCount ++;
 
-	if (SaveObj->ScoreHistory.IsEmpty())
-	{
-		SaveObj->ScoreHistory.Add({5000, 1000});
-		SaveObj->ScoreHistory.Add({4000, 1001});
-		SaveObj->ScoreHistory.Add({3000, 1002});
-		SaveObj->ScoreHistory.Add({2000, 1003});
-		SaveObj->ScoreHistory.Add({1000, 1004});	
-	}
-
 	UGameplayStatics::SaveGameToSlot(SaveObj, GameSave::BoothSessionSlot, 0);
 }
