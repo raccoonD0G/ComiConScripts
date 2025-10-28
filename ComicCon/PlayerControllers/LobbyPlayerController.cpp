@@ -78,18 +78,16 @@ void ALobbyPlayerController::SetFullscreen(bool bTrueFullscreen)
 void ALobbyPlayerController::OpenSetting()
 {
     ALevelHUD* LevelHUD = Cast<ALevelHUD>(GetHUD());
-
     if (!ensureMsgf(LevelHUD != nullptr, TEXT("LevelHUD is null in %s"), *GetName()))
     {
         return;
-	}
+    }
 
     ULobbyWidget* LobbyWidget = Cast<ULobbyWidget>(LevelHUD->GetLevelWidget());
-
-    if (ensureMsgf(LobbyWidget != nullptr, TEXT("LobbyWidget is null in %s"), *GetName()))
+    if (!ensureMsgf(LobbyWidget != nullptr, TEXT("LobbyWidget is null in %s"), *GetName()))
     {
-		return;
+        return;
     }
-    
-	LobbyWidget->OpenSetting();
+
+    LobbyWidget->OpenSetting();
 }
