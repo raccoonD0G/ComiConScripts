@@ -69,41 +69,46 @@ void UResultWidget::Populate()
 
 void UResultWidget::RankChange()
 {
-	UBoothSave* SaveObj = nullptr;
-	
-	if (UGameplayStatics::DoesSaveGameExist(GameSave::BoothSessionSlot, 0))
-	{
-		SaveObj = Cast<UBoothSave>(UGameplayStatics::LoadGameFromSlot(GameSave::BoothSessionSlot, 0));
-	}
-	
-	if (!SaveObj) return;
-	
-	const int32 HunterNum = SaveObj->CurrentHunterCount;
-	const int32 Score = SaveObj->LastScore;
+        UBoothSave* SaveObj = nullptr;
 
-	// 추가하고 재정렬
-	PendingScores.Add({Score, HunterNum});
-	
-	PendingScores.Sort([](const FScoreEntry& A, const FScoreEntry& B) { return A.Score > B.Score; });
+        if (UGameplayStatics::DoesSaveGameExist(GameSave::BoothSessionSlot, 0))
+        {
+                SaveObj = Cast<UBoothSave>(UGameplayStatics::LoadGameFromSlot(GameSave::BoothSessionSlot, 0));
+        }
 
-	SaveObj->ScoreHistory = PendingScores;
+        if (!SaveObj) return;
 
-	UGameplayStatics::SaveGameToSlot(SaveObj, GameSave::BoothSessionSlot, 0);
-	
-	if(MyScoreAnimation)
-	{
-		PlayAnimation(MyScoreAnimation);
-	}
-	
-	for(int i = 0; i < TargetCount; i++)
-	{
-		if(PendingScores[i].HunterCount == HunterNum)
-		{
-			ListBoxCheck(i);
+        const int32 HunterNum = SaveObj->CurrentHunterCount;
+        const int32 Score = SaveObj->LastScore;
 
-			return;
-		}
-	}	
+        // 추가하고 재정렬
+        PendingScores.Add({Score, HunterNum});
+
+        PendingScores.Sort([](const FScoreEntry& A, const FScoreEntry& B) { return A.Score > B.Score; });
+
+        SaveObj->ScoreHistory = PendingScores;
+
+        UGameplayStatics::SaveGameToSlot(SaveObj, GameSave::BoothSessionSlot, 0);
+
+        TargetCount = PendingScores.Num() < 5 ? PendingScores.Num() : 5;
+        CurrentIndex = TargetCount;
+
+        const int32 PlayerIndex = PendingScores.IndexOfByPredicate([HunterNum, Score](const FScoreEntry& Entry)
+        {
+                return Entry.HunterCount == HunterNum && Entry.Score == Score;
+        });
+
+        RefreshDisplayedRows(PlayerIndex);
+
+        if(MyScoreAnimation)
+        {
+                PlayAnimation(MyScoreAnimation);
+        }
+
+        if(PlayerIndex != INDEX_NONE && PlayerIndex < TargetCount)
+        {
+                ListBoxCheck(PlayerIndex);
+        }
 }
 
 void UResultWidget::SpawnNextRow()
@@ -155,9 +160,102 @@ void UResultWidget::SpawnNextRow()
 
 void UResultWidget::ListBoxCheck(int32 Check)
 {
-	ChangeRow = Cast<URankingRowWidget>(ListBox->GetChildAt(Check));
+        if (!ListBox || Check < 0 || Check >= ListBox->GetChildrenCount())
+        {
+                return;
+        }
 
-	ChangeRow->ChangeWidget(PendingScores[Check].Score, PendingScores[Check].HunterCount);
+        ChangeRow = Cast<URankingRowWidget>(ListBox->GetChildAt(Check));
+
+        if (!ChangeRow || !PendingScores.IsValidIndex(Check)) return;
+
+        const FScoreEntry& Entry = PendingScores[Check];
+        ChangeRow->ChangeWidget(Check + 1, Entry.Score, Entry.HunterCount);
+}
+
+void UResultWidget::RefreshDisplayedRows(int32 HighlightIndex)
+{
+        if (!ListBox || !RowWidgetClass) return;
+
+        for (int32 Index = 0; Index < TargetCount; ++Index)
+        {
+                URankingRowWidget* Row = nullptr;
+                bool bNewRowCreated = false;
+
+                if (Index < ListBox->GetChildrenCount())
+                {
+                        Row = Cast<URankingRowWidget>(ListBox->GetChildAt(Index));
+                }
+
+                if (!Row)
+                {
+                        Row = CreateWidget<URankingRowWidget>(GetWorld(), RowWidgetClass);
+
+                        if (!Row) continue;
+
+                        UVerticalBoxSlot* NewSlot = Cast<UVerticalBoxSlot>(ListBox->AddChild(Row));
+
+                        if (NewSlot)
+                        {
+                                NewSlot->SetHorizontalAlignment(HAlign_Center);
+                                NewSlot->SetVerticalAlignment(VAlign_Center);
+                        }
+
+                        bNewRowCreated = true;
+                }
+
+                if (!Row) continue;
+
+                if (UVerticalBoxSlot* ListSlot = Cast<UVerticalBoxSlot>(Row->Slot))
+                {
+                        ListSlot->SetHorizontalAlignment(HAlign_Center);
+                        ListSlot->SetVerticalAlignment(VAlign_Center);
+
+                        const int32 Rank = Index + 1;
+
+                        if (Rank == 2)
+                        {
+                                ListSlot->SetPadding(FMargin(0.f, 20.f, 0.f, 0.f));
+                        }
+                        else if (Rank == 3)
+                        {
+                                ListSlot->SetPadding(FMargin(0.f, 22.f, 0.f, 0.f));
+                        }
+                        else if (Rank >= 4)
+                        {
+                                ListSlot->SetPadding(FMargin(0.f, 20.f, 0.f, 0.f));
+                        }
+                        else
+                        {
+                                ListSlot->SetPadding(FMargin());
+                        }
+                }
+
+                const FScoreEntry& Entry = PendingScores[Index];
+                const int32 Rank = Index + 1;
+                const bool bIsHighlightRow = (Index == HighlightIndex);
+
+                if (bNewRowCreated)
+                {
+                        Row->SetData(Rank, Entry.HunterCount, Entry.Score);
+                }
+                else if (!Row->MatchesData(Rank, Entry.HunterCount, Entry.Score))
+                {
+                        if (bIsHighlightRow)
+                        {
+                                Row->RefreshData(Rank, Entry.HunterCount, Entry.Score);
+                        }
+                        else
+                        {
+                                Row->ChangeWidget(Rank, Entry.Score, Entry.HunterCount);
+                        }
+                }
+        }
+
+        while (ListBox->GetChildrenCount() > TargetCount)
+        {
+                ListBox->RemoveChildAt(ListBox->GetChildrenCount() - 1);
+        }
 }
 
 void UResultWidget::OpenOutroAfterDelay()

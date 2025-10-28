@@ -48,6 +48,25 @@ void URankingRowWidget::HandleAnimationFinished()
 
 void URankingRowWidget::SetData(int32 Rank, int32 HunterNum, int32 Score)
 {
+    RefreshData(Rank, HunterNum, Score);
+
+    if (ShowAnimation)
+    {
+        PlayAnimation(ShowAnimation);
+    }
+    else
+    {
+        // 애니메이션 없으면 즉시 다음으로 넘어감
+        StartAnimationFinished.Broadcast();
+    }
+}
+
+void URankingRowWidget::RefreshData(int32 Rank, int32 HunterNum, int32 Score)
+{
+    CurrentRank = Rank;
+    HNum = HunterNum;
+    CScore = Score;
+
     if (RankText) { RankText->SetText(MakeOrdinalText(Rank)); }
     if (Text_HunterNum) { Text_HunterNum->SetText(FText::FromString(FString::FromInt(HunterNum))); }
     if (ScoreText) { ScoreText->SetText(FText::AsNumber(Score)); }
@@ -64,7 +83,7 @@ void URankingRowWidget::SetData(int32 Rank, int32 HunterNum, int32 Score)
     {
         RankText->SetColorAndOpacity(FSlateColor(FLinearColor(0.66f, 0.12f, 0.01f, 1.0f)));
     }
-    
+
     if(Rank < 4)
     {
         const float SetF = Rank * 0.05;
@@ -75,16 +94,6 @@ void URankingRowWidget::SetData(int32 Rank, int32 HunterNum, int32 Score)
     {
         const FVector2d ScaleSet = {0.85f, 0.85f};
         SetRenderScale(ScaleSet);
-    }
-    
-    if (ShowAnimation)
-    {
-        PlayAnimation(ShowAnimation);
-    }
-    else
-    {
-        // 애니메이션 없으면 즉시 다음으로 넘어감
-        StartAnimationFinished.Broadcast();
     }
 }
 
@@ -159,15 +168,21 @@ void URankingRowWidget::FillImage()
     }
 }
 
-void URankingRowWidget::ChangeWidget(int32 score, int32 hunterNum)
+bool URankingRowWidget::MatchesData(int32 Rank, int32 HunterNum, int32 Score) const
 {
-    CScore = score;
-    HNum = hunterNum;
-    
+    return CurrentRank == Rank && HNum == HunterNum && CScore == Score;
+}
+
+void URankingRowWidget::ChangeWidget(int32 Rank, int32 Score, int32 HunterNum)
+{
+    CurrentRank = Rank;
+    CScore = Score;
+    HNum = HunterNum;
+
     if (UWorld* World = GetWorld())
     {
         World->GetTimerManager().ClearTimer(TimerHandle1);
-        
+
         World->GetTimerManager().SetTimer(
             TimerHandle1,
             FTimerDelegate::CreateWeakLambda(this, [this]()
@@ -179,13 +194,12 @@ void URankingRowWidget::ChangeWidget(int32 score, int32 hunterNum)
 
                 ChangeScore();
 
-                if (ScoreText) { ScoreText->SetText(FText::AsNumber(CScore)); }
-                if (Text_HunterNum) { Text_HunterNum->SetText(FText::FromString(FString::FromInt(HNum))); }
+                RefreshData(CurrentRank, HNum, CScore);
 
                 PlayImpactSound();
             }),
-            1.0f,   
-            false    
+            1.0f,
+            false
         );
     }
 }

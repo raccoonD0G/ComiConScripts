@@ -38,14 +38,16 @@ public:
 	UWidgetAnimation* MyScoreAnimation;
 	
 private:
-	void Populate();
+        void Populate();
 
-	void RankChange();
+        void RankChange();
 
-	UFUNCTION()
-	void SpawnNextRow(); // 타이머 콜백
+        UFUNCTION()
+        void SpawnNextRow(); // 타이머 콜백
 
-	void ListBoxCheck(int32 Check);
+        void ListBoxCheck(int32 Check);
+
+        void RefreshDisplayedRows(int32 HighlightIndex);
 
 	UPROPERTY()
 	TArray<FScoreEntry> PendingScores;

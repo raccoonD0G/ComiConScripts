@@ -19,6 +19,8 @@ public:
     UFUNCTION(BlueprintCallable)
     void SetData(int32 Rank, int32 HunterNum, int32 Score);
 
+    void RefreshData(int32 Rank, int32 HunterNum, int32 Score);
+
     /** 애니메이션 완료 시 델리게이트 */
     UPROPERTY(BlueprintAssignable, Category = "Event")
     FOnStartAnimationFinished StartAnimationFinished;
@@ -36,7 +38,13 @@ public:
     void FillImage();
 
     UFUNCTION()
-    void ChangeWidget(int32 score, int32 hunterNum);
+    void ChangeWidget(int32 Rank, int32 Score, int32 HunterNum);
+
+    int32 GetCurrentRank() const { return CurrentRank; }
+    int32 GetCurrentScore() const { return CScore; }
+    int32 GetCurrentHunterCount() const { return HNum; }
+
+    bool MatchesData(int32 Rank, int32 HunterNum, int32 Score) const;
 
 protected:
     UPROPERTY(meta = (BindWidget))
@@ -79,8 +87,11 @@ private:
     FTimerHandle TimerHandle2;
 
     UPROPERTY()
+    int32 CurrentRank = 0;
+
+    UPROPERTY()
     int32 CScore = 0;
-    
+
     UPROPERTY()
     int32 HNum = 0;
 
