@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/SaveGame.h"
-#include "ScoreSaveGame.generated.h"
+#include "BoothSave.generated.h"
 
 USTRUCT(BlueprintType)
 struct FScoreEntry
@@ -22,7 +22,7 @@ struct FScoreEntry
  * 
  */
 UCLASS()
-class COMICCON_API UScoreSaveGame : public USaveGame
+class COMICCON_API UBoothSave : public USaveGame
 {
 	GENERATED_BODY()
 	
@@ -33,14 +33,14 @@ public:
     UPROPERTY(BlueprintReadWrite)
     int32 BestScore = 0;
 
-        UPROPERTY(BlueprintReadWrite)
-        TArray<FScoreEntry> ScoreHistory;
+    UPROPERTY(BlueprintReadWrite)
+    TArray<FScoreEntry> ScoreHistory;
 
-        UPROPERTY(BlueprintReadWrite)
-        int32 TotalBattleCount = 0;
+    UPROPERTY(BlueprintReadWrite)
+    int32 TotalBattleCount = 0;
 
-        UPROPERTY(BlueprintReadWrite)
-        TArray<FString> BattleTimestamps;
+    UPROPERTY(BlueprintReadWrite)
+    TArray<FString> BattleTimestamps;
 
 	UPROPERTY(BlueprintReadWrite)
 	int32 CurrentHunterCount = 1004;

@@ -20,8 +20,4 @@ protected:
 public:
 	UFUNCTION()
 	void Init();
-
-private:
-	static constexpr const TCHAR* SaveSlotName = TEXT("BattleSave");
-	static constexpr int32 UserIndex = 0;
 };

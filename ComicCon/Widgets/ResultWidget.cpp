@@ -4,7 +4,7 @@
 #include "Widgets/ResultWidget.h"
 #include "Components/VerticalBox.h"
 #include "Kismet/GameplayStatics.h"
-#include "SaveGames/ScoreSaveGame.h"
+#include "SaveGames/BoothSave.h"
 #include "RankingRowWidget.h"
 #include "Components/TextBlock.h"
 #include "Components/VerticalBoxSlot.h"
@@ -12,6 +12,7 @@
 #include "MediaSource.h"
 #include "Engine/World.h"
 #include "TimerManager.h"
+#include "SaveGames/GameSaveConstants.h"
 
 void UResultWidget::NativeConstruct()
 {
@@ -31,15 +32,15 @@ void UResultWidget::Populate()
 	
 	if (!ListBox || !RowWidgetClass) return;
 
-	UScoreSaveGame* SaveObj = nullptr;
+	UBoothSave* SaveObj = nullptr;
 	
-	if (UGameplayStatics::DoesSaveGameExist(SaveSlotName, UserIndex))
+	if (UGameplayStatics::DoesSaveGameExist(GameSave::BoothSessionSlot, 0))
 	{
-		SaveObj = Cast<UScoreSaveGame>(UGameplayStatics::LoadGameFromSlot(SaveSlotName, UserIndex));
+		SaveObj = Cast<UBoothSave>(UGameplayStatics::LoadGameFromSlot(GameSave::BoothSessionSlot, 0));
 	}
 	if (!SaveObj)
 	{
-		SaveObj = Cast<UScoreSaveGame>(UGameplayStatics::CreateSaveGameObject(UScoreSaveGame::StaticClass()));
+		SaveObj = Cast<UBoothSave>(UGameplayStatics::CreateSaveGameObject(UBoothSave::StaticClass()));
 	}
 	
 	if (!SaveObj) return;
@@ -68,11 +69,11 @@ void UResultWidget::Populate()
 
 void UResultWidget::RankChange()
 {
-	UScoreSaveGame* SaveObj = nullptr;
+	UBoothSave* SaveObj = nullptr;
 	
-	if (UGameplayStatics::DoesSaveGameExist(SaveSlotName, UserIndex))
+	if (UGameplayStatics::DoesSaveGameExist(GameSave::BoothSessionSlot, 0))
 	{
-		SaveObj = Cast<UScoreSaveGame>(UGameplayStatics::LoadGameFromSlot(SaveSlotName, UserIndex));
+		SaveObj = Cast<UBoothSave>(UGameplayStatics::LoadGameFromSlot(GameSave::BoothSessionSlot, 0));
 	}
 	
 	if (!SaveObj) return;
@@ -87,7 +88,7 @@ void UResultWidget::RankChange()
 
 	SaveObj->ScoreHistory = PendingScores;
 
-	UGameplayStatics::SaveGameToSlot(SaveObj, SaveSlotName, UserIndex);
+	UGameplayStatics::SaveGameToSlot(SaveObj, GameSave::BoothSessionSlot, 0);
 	
 	if(MyScoreAnimation)
 	{

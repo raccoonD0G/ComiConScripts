@@ -4,10 +4,11 @@
 #include "Widgets/RankingBoardWidget.h"
 #include "Components/VerticalBox.h"
 #include "Kismet/GameplayStatics.h"
-#include "SaveGames/ScoreSaveGame.h"
+#include "SaveGames/BoothSave.h"
 #include "RankingRowWidget.h"
 #include "Chaos/Math/Poisson.h"
 #include "Components/VerticalBoxSlot.h"
+#include "SaveGames/GameSaveConstants.h"
 
 void URankingBoardWidget::NativeConstruct()
 {
@@ -20,10 +21,10 @@ void URankingBoardWidget::Populate()
 {
     if (!ListBox || !RowWidgetClass) return;
 
-    UScoreSaveGame* SaveObj = nullptr;
-    if (UGameplayStatics::DoesSaveGameExist(SaveSlotName, UserIndex))
+    UBoothSave* SaveObj = nullptr;
+    if (UGameplayStatics::DoesSaveGameExist(GameSave::BoothSessionSlot, 0))
     {
-        SaveObj = Cast<UScoreSaveGame>(UGameplayStatics::LoadGameFromSlot(SaveSlotName, UserIndex));
+        SaveObj = Cast<UBoothSave>(UGameplayStatics::LoadGameFromSlot(GameSave::BoothSessionSlot, 0));
     }
     if (!SaveObj) return;
 

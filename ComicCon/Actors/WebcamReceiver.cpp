@@ -3,7 +3,6 @@
 
 #include "Actors/WebcamReceiver.h"
 #include "Components/BoxComponent.h"
-#include "SaveGames/ScoreSaveGame.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/Engine.h"          // GEngine
 #include "Engine/World.h"           // GetWorld()
@@ -11,6 +10,7 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Materials/MaterialInstance.h"
 #include "Materials/MaterialInterface.h"
+#include "SaveGames/BoothSave.h"
 
 AWebcamReceiver::AWebcamReceiver()
 {
@@ -68,10 +68,10 @@ void AWebcamReceiver::BeginPlay()
     VideoMaterialInstance->SetScalarParameterValue(TEXT("Alpha Preview"), 0.0f);
 
     // 3) 세이브 로드
-    UScoreSaveGame* LoadedSave = nullptr;
+    UBoothSave* LoadedSave = nullptr;
     if (UGameplayStatics::DoesSaveGameExist(TEXT("BattleSave"), 0))
     {
-        LoadedSave = Cast<UScoreSaveGame>(UGameplayStatics::LoadGameFromSlot(TEXT("BattleSave"), 0));
+        LoadedSave = Cast<UBoothSave>(UGameplayStatics::LoadGameFromSlot(TEXT("BattleSave"), 0));
     }
     if (!LoadedSave)
     {

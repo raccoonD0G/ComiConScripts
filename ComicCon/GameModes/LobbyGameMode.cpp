@@ -3,7 +3,8 @@
 
 #include "GameModes/LobbyGameMode.h"
 #include "Kismet/GameplayStatics.h"
-#include "SaveGames/ScoreSaveGame.h"
+#include "SaveGames/BoothSave.h"
+#include "SaveGames/GameSaveConstants.h"
 
 void ALobbyGameMode::BeginPlay()
 {
@@ -15,14 +16,14 @@ void ALobbyGameMode::BeginPlay()
 void ALobbyGameMode::Init()
 {
 	// 저장 객체 로드 또는 생성
-	UScoreSaveGame* SaveObj = nullptr;
-	if (UGameplayStatics::DoesSaveGameExist(SaveSlotName, UserIndex))
+	UBoothSave* SaveObj = nullptr;
+	if (UGameplayStatics::DoesSaveGameExist(GameSave::BoothSessionSlot, 0))
 	{
-		SaveObj = Cast<UScoreSaveGame>(UGameplayStatics::LoadGameFromSlot(SaveSlotName, UserIndex));
+		SaveObj = Cast<UBoothSave>(UGameplayStatics::LoadGameFromSlot(GameSave::BoothSessionSlot, 0));
 	}
 	if (!SaveObj)
 	{
-		SaveObj = Cast<UScoreSaveGame>(UGameplayStatics::CreateSaveGameObject(UScoreSaveGame::StaticClass()));
+		SaveObj = Cast<UBoothSave>(UGameplayStatics::CreateSaveGameObject(UBoothSave::StaticClass()));
 	}
 
 	if(!SaveObj) return;
@@ -47,5 +48,5 @@ void ALobbyGameMode::Init()
 		SaveObj->ScoreHistory.RemoveAt(0, ToRemove, /*bAllowShrinking=*/false);
 	}
 
-	UGameplayStatics::SaveGameToSlot(SaveObj, SaveSlotName, UserIndex);
+	UGameplayStatics::SaveGameToSlot(SaveObj, GameSave::BoothSessionSlot, 0);
 }

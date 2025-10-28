@@ -6,7 +6,7 @@
 #include "Components/Image.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetRenderingLibrary.h"
-#include "SaveGames/ScoreSaveGame.h"
+#include "SaveGames/BoothSave.h"
 #include "Components/WidgetSwitcher.h"
 #include "Components/Button.h"
 #include "Materials/MaterialInstanceDynamic.h"
@@ -15,6 +15,7 @@
 #include "MediaSource.h"
 #include "Engine/World.h"
 #include "TimerManager.h"
+#include "SaveGames/GameSaveConstants.h"
 
 void ULobbyWidget::UpdateViewColor(FLinearColor NewColor)
 {
@@ -229,14 +230,14 @@ void ULobbyWidget::ChangeHueShift(float f)
 
 void ULobbyWidget::SaveParam()
 {
-    UScoreSaveGame* SaveObj = nullptr;
-    if (UGameplayStatics::DoesSaveGameExist(SaveSlotName, UserIndex))
+    UBoothSave* SaveObj = nullptr;
+    if (UGameplayStatics::DoesSaveGameExist(GameSave::BoothSessionSlot, 0))
     {
-        SaveObj = Cast<UScoreSaveGame>(UGameplayStatics::LoadGameFromSlot(SaveSlotName, UserIndex));
+        SaveObj = Cast<UBoothSave>(UGameplayStatics::LoadGameFromSlot(GameSave::BoothSessionSlot, 0));
     }
     if (!SaveObj)
     {
-        SaveObj = Cast<UScoreSaveGame>(UGameplayStatics::CreateSaveGameObject(UScoreSaveGame::StaticClass()));
+        SaveObj = Cast<UBoothSave>(UGameplayStatics::CreateSaveGameObject(UBoothSave::StaticClass()));
     }
 
     if(!SaveObj) return;
@@ -251,19 +252,19 @@ void ULobbyWidget::SaveParam()
     SaveObj->Saturation = SaveSaturation;
     SaveObj->HueShift = SaveHueShift;
 
-    UGameplayStatics::SaveGameToSlot(SaveObj, SaveSlotName, UserIndex);
+    UGameplayStatics::SaveGameToSlot(SaveObj, GameSave::BoothSessionSlot, 0);
 }
 
 void ULobbyWidget::ResetParam()
 {
-    UScoreSaveGame* SaveObj = nullptr;
-    if (UGameplayStatics::DoesSaveGameExist(SaveSlotName, UserIndex))
+    UBoothSave* SaveObj = nullptr;
+    if (UGameplayStatics::DoesSaveGameExist(GameSave::BoothSessionSlot, 0))
     {
-        SaveObj = Cast<UScoreSaveGame>(UGameplayStatics::LoadGameFromSlot(SaveSlotName, UserIndex));
+        SaveObj = Cast<UBoothSave>(UGameplayStatics::LoadGameFromSlot(GameSave::BoothSessionSlot, 0));
     }
     if (!SaveObj)
     {
-        SaveObj = Cast<UScoreSaveGame>(UGameplayStatics::CreateSaveGameObject(UScoreSaveGame::StaticClass()));
+        SaveObj = Cast<UBoothSave>(UGameplayStatics::CreateSaveGameObject(UBoothSave::StaticClass()));
     }
 
     if(!SaveObj) return;
@@ -278,7 +279,7 @@ void ULobbyWidget::ResetParam()
     SaveObj->Saturation = 0.0f;
     SaveObj->HueShift = 0.0f;
 
-    UGameplayStatics::SaveGameToSlot(SaveObj, SaveSlotName, UserIndex);
+    UGameplayStatics::SaveGameToSlot(SaveObj, GameSave::BoothSessionSlot, 0);
 
     ResetMap();
 }
@@ -395,14 +396,14 @@ void ULobbyWidget::NativeConstruct()
         RtMID = UMaterialInstanceDynamic::Create(RtMaterial, this);
     }
 
-    UScoreSaveGame* SaveObj = nullptr;
-    if (UGameplayStatics::DoesSaveGameExist(SaveSlotName, UserIndex))
+    UBoothSave* SaveObj = nullptr;
+    if (UGameplayStatics::DoesSaveGameExist(GameSave::BoothSessionSlot, 0))
     {
-        SaveObj = Cast<UScoreSaveGame>(UGameplayStatics::LoadGameFromSlot(SaveSlotName, UserIndex));
+        SaveObj = Cast<UBoothSave>(UGameplayStatics::LoadGameFromSlot(GameSave::BoothSessionSlot, 0));
     }
     if (!SaveObj)
     {
-        SaveObj = Cast<UScoreSaveGame>(UGameplayStatics::CreateSaveGameObject(UScoreSaveGame::StaticClass()));
+        SaveObj = Cast<UBoothSave>(UGameplayStatics::CreateSaveGameObject(UBoothSave::StaticClass()));
     }
 
     if(!SaveObj) return;

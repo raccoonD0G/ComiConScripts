@@ -254,7 +254,4 @@ private:
 
 	// 필요 시: ScaleToFit 보정 버전
 	bool ComputeUV_ScaleToFit(const FPointerEvent& MouseEvent, FVector2D& OutUV) const;
-
-	static constexpr const TCHAR* SaveSlotName = TEXT("BattleSave");
-	static constexpr int32 UserIndex = 0;
 };

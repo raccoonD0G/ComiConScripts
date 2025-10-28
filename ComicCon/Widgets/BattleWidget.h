@@ -49,13 +49,6 @@ private:
     UFUNCTION(BlueprintCallable, Category = "BattleWidget")
     void SetTimerText(int32 InSecond);
 
-    // 저장 슬롯 설정 + 캐시된 하이스코어
-    UPROPERTY(EditDefaultsOnly, Category = "Save")
-    FString SaveSlotName = TEXT("BattleSave");
-
-    UPROPERTY(EditDefaultsOnly, Category = "Save")
-    int32 UserIndex = 0;
-
     UPROPERTY(VisibleAnywhere, Category = "Score")
     int32 CachedHighScore = 0;
 

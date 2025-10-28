@@ -7,7 +7,8 @@
 #include "GameStates/BattleGameState.h"
 #include "Kismet/GameplayStatics.h"
 #include "Pawns/ViewPlayer.h"
-#include "SaveGames/ScoreSaveGame.h"
+#include "SaveGames/BoothSave.h"
+#include "SaveGames/GameSaveConstants.h"
 
 void UBattleWidget::NativeConstruct()
 {
@@ -34,9 +35,9 @@ void UBattleWidget::NativeConstruct()
 
     // === �ְ� ���� �ε� & ǥ�� ===
     CachedHighScore = 0;
-    if (UGameplayStatics::DoesSaveGameExist(SaveSlotName, UserIndex))
+    if (UGameplayStatics::DoesSaveGameExist(GameSave::BoothSessionSlot, 0))
     {
-        if (UScoreSaveGame* SaveObj = Cast<UScoreSaveGame>(UGameplayStatics::LoadGameFromSlot(SaveSlotName, UserIndex)))
+        if (UBoothSave* SaveObj = Cast<UBoothSave>(UGameplayStatics::LoadGameFromSlot(GameSave::BoothSessionSlot, 0)))
         {
             for (const FScoreEntry& Entry : SaveObj->ScoreHistory)
             {

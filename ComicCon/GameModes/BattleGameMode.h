@@ -38,10 +38,6 @@ public:
 
 // Score Section
 private:
-
-    static constexpr const TCHAR* SaveSlotName = TEXT("BattleSave");
-    static constexpr int32 UserIndex = 0;
-
     void RecordBattleEntry();
     void SaveScore();
 

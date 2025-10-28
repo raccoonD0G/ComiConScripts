@@ -9,7 +9,8 @@
 #include "Utils.h"
 #include "Kismet/GameplayStatics.h"
 #include "Async/Async.h"
-#include "SaveGames/ScoreSaveGame.h"
+#include "SaveGames/BoothSave.h"
+
 #include "HUDs/BattleHUD.h"
 #include "Misc/DateTime.h"
 
@@ -20,6 +21,8 @@
 #include "Pawns/ViewPlayer.h"
 #include "Widgets/GameCompleteWidget.h"       // UGameCompleteWidget
 #include "Widgets/BattleWidget.h"
+
+#include "SaveGames/GameSaveConstants.h"
 
 void ABattleGameMode::BeginPlay()
 {
@@ -215,15 +218,15 @@ void ABattleGameMode::SaveScore()
     }
 
     // 저장 객체 로드 또는 생성
-    UScoreSaveGame* SaveObj = nullptr;
-    if (UGameplayStatics::DoesSaveGameExist(SaveSlotName, UserIndex))
+    UBoothSave* SaveObj = nullptr;
+    if (UGameplayStatics::DoesSaveGameExist(GameSave::BoothSessionSlot, 0))
     {
-        SaveObj = Cast<UScoreSaveGame>(UGameplayStatics::LoadGameFromSlot(SaveSlotName, UserIndex));
+        SaveObj = Cast<UBoothSave>(UGameplayStatics::LoadGameFromSlot(GameSave::BoothSessionSlot, 0));
     }
 
     if (!SaveObj)
     {
-        SaveObj = Cast<UScoreSaveGame>(UGameplayStatics::CreateSaveGameObject(UScoreSaveGame::StaticClass()));
+        SaveObj = Cast<UBoothSave>(UGameplayStatics::CreateSaveGameObject(UBoothSave::StaticClass()));
     }
 
     if(!SaveObj) return;
@@ -232,20 +235,20 @@ void ABattleGameMode::SaveScore()
     SaveObj->LastScore = Score;
     SaveObj->BestScore = FMath::Max(SaveObj->BestScore, Score);
 
-    UGameplayStatics::SaveGameToSlot(SaveObj, SaveSlotName, UserIndex);
+    UGameplayStatics::SaveGameToSlot(SaveObj, GameSave::BoothSessionSlot, 0);
 }
 
 void ABattleGameMode::RecordBattleEntry()
 {
-    UScoreSaveGame* SaveObj = nullptr;
-    if (UGameplayStatics::DoesSaveGameExist(SaveSlotName, UserIndex))
+    UBoothSave* SaveObj = nullptr;
+    if (UGameplayStatics::DoesSaveGameExist(GameSave::BoothSessionSlot, 0))
     {
-        SaveObj = Cast<UScoreSaveGame>(UGameplayStatics::LoadGameFromSlot(SaveSlotName, UserIndex));
+        SaveObj = Cast<UBoothSave>(UGameplayStatics::LoadGameFromSlot(GameSave::BoothSessionSlot, 0));
     }
 
     if (!SaveObj)
     {
-        SaveObj = Cast<UScoreSaveGame>(UGameplayStatics::CreateSaveGameObject(UScoreSaveGame::StaticClass()));
+        SaveObj = Cast<UBoothSave>(UGameplayStatics::CreateSaveGameObject(UBoothSave::StaticClass()));
     }
 
     if (!SaveObj) return;
@@ -263,5 +266,5 @@ void ABattleGameMode::RecordBattleEntry()
         SaveObj->BattleTimestamps.RemoveAt(0, Excess, /*bAllowShrinking=*/false);
     }
 
-    UGameplayStatics::SaveGameToSlot(SaveObj, SaveSlotName, UserIndex);
+    UGameplayStatics::SaveGameToSlot(SaveObj, GameSave::BoothSessionSlot, 0);
 }

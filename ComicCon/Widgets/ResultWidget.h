@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "SaveGames/ScoreSaveGame.h"
+#include "SaveGames/BoothSave.h"
 #include "ResultWidget.generated.h"
 
 /**
@@ -33,13 +33,6 @@ public:
 	// 행으로 쓸 위젯 클래스 (BP에서 지정)
 	UPROPERTY(EditDefaultsOnly, Category = "Ranking")
 	TSubclassOf<class URankingRowWidget> RowWidgetClass;
-
-	// 슬롯/유저 인덱스 (고정이면 constexpr/const로 빼도 됨)
-	UPROPERTY(EditDefaultsOnly, Category = "Ranking")
-	FString SaveSlotName = TEXT("BattleSave");
-
-	UPROPERTY(EditDefaultsOnly, Category = "Ranking")
-	int32 UserIndex = 0;
 
 	UPROPERTY(meta = (BindWidgetAnim), Transient)
 	UWidgetAnimation* MyScoreAnimation;
