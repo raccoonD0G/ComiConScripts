@@ -81,14 +81,22 @@ void UResultWidget::RankChange()
 	const int32 HunterNum = SaveObj->CurrentHunterCount;
 	const int32 Score = SaveObj->LastScore;
 
-	// 추가하고 재정렬
-	PendingScores.Add({Score, HunterNum});
-	
-	PendingScores.Sort([](const FScoreEntry& A, const FScoreEntry& B) { return A.Score > B.Score; });
+        const bool bAlreadyRecorded = PendingScores.ContainsByPredicate([&](const FScoreEntry& Entry)
+        {
+                return Entry.Score == Score && Entry.HunterCount == HunterNum;
+        });
 
-	SaveObj->ScoreHistory = PendingScores;
+        if (!bAlreadyRecorded)
+        {
+                // 추가하고 재정렬
+                PendingScores.Add({Score, HunterNum});
 
-	UGameplayStatics::SaveGameToSlot(SaveObj, GameSave::BoothSessionSlot, 0);
+                PendingScores.Sort([](const FScoreEntry& A, const FScoreEntry& B) { return A.Score > B.Score; });
+
+                SaveObj->ScoreHistory = PendingScores;
+
+                UGameplayStatics::SaveGameToSlot(SaveObj, GameSave::BoothSessionSlot, 0);
+        }
 	
 	if(MyScoreAnimation)
 	{

@@ -180,7 +180,8 @@ void ABattleGameMode::SaveScore()
 
     // 저장 객체 로드 또는 생성
     UBoothSave* SaveObj = nullptr;
-    if (UGameplayStatics::DoesSaveGameExist(GameSave::BoothSessionSlot, 0))
+    const bool bHasExistingSave = UGameplayStatics::DoesSaveGameExist(GameSave::BoothSessionSlot, 0);
+    if (bHasExistingSave)
     {
         SaveObj = Cast<UBoothSave>(UGameplayStatics::LoadGameFromSlot(GameSave::BoothSessionSlot, 0));
     }
@@ -195,6 +196,14 @@ void ABattleGameMode::SaveScore()
     // 점수 갱신 로직
     SaveObj->LastScore = Score;
     SaveObj->BestScore = FMath::Max(SaveObj->BestScore, Score);
+
+    // 현재 점수를 기록하고 랭킹 순서에 맞게 정렬
+    const FScoreEntry NewEntry{Score, SaveObj->CurrentHunterCount};
+    SaveObj->ScoreHistory.Add(NewEntry);
+    SaveObj->ScoreHistory.Sort([](const FScoreEntry& A, const FScoreEntry& B)
+    {
+        return A.Score > B.Score;
+    });
 
     UGameplayStatics::SaveGameToSlot(SaveObj, GameSave::BoothSessionSlot, 0);
 }
