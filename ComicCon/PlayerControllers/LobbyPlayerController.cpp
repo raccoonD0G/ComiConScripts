@@ -55,7 +55,7 @@ void ALobbyPlayerController::OnThreePressed()
 
 void ALobbyPlayerController::OnFourPressed()
 {
-    // TODO: Add Direct Result Test Code
+    OpenDebug();
 }
 
 void ALobbyPlayerController::SetWindowed(int32 Width, int32 Height)
@@ -96,4 +96,21 @@ void ALobbyPlayerController::OpenSetting()
     }
 
     LobbyWidget->OpenSetting();
+}
+
+void ALobbyPlayerController::OpenDebug()
+{
+    ALevelHUD* LevelHUD = Cast<ALevelHUD>(GetHUD());
+    if (!ensureMsgf(LevelHUD != nullptr, TEXT("LevelHUD is null in %s"), *GetName()))
+    {
+        return;
+    }
+
+    ULobbyWidget* LobbyWidget = Cast<ULobbyWidget>(LevelHUD->GetLevelWidget());
+    if (!ensureMsgf(LobbyWidget != nullptr, TEXT("LobbyWidget is null in %s"), *GetName()))
+    {
+        return;
+    }
+
+    LobbyWidget->OpenDebug();
 }

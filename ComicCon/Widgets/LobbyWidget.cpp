@@ -614,3 +614,13 @@ bool ULobbyWidget::ComputeUV_ScaleToFit(const FPointerEvent& MouseEvent, FVector
     OutUV = FVector2D(PPrime.X / Ds.X, PPrime.Y / Ds.Y);
     return true;
 }
+
+
+void ULobbyWidget::OpenDebug()
+{
+    if (ensureMsgf(WidgetSwitcher != nullptr, TEXT("WidgetSwitcher is null on %s"), *GetName()))
+    {
+        const int32 Index = 2;
+        WidgetSwitcher->SetActiveWidgetIndex(Index);
+    }
+}

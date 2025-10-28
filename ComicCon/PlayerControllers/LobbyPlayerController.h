@@ -48,4 +48,6 @@ private:
 	void SetFullscreen(bool bTrueFullscreen);
 
 	void OpenSetting();
+
+	void OpenDebug();
 };
