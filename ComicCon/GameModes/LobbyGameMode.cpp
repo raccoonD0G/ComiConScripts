@@ -38,15 +38,6 @@ void ALobbyGameMode::Init()
 		SaveObj->ScoreHistory.Add({2000, 1003});
 		SaveObj->ScoreHistory.Add({1000, 1004});	
 	}
-	
-	// 너무 커지는 걸 방지하고 싶다면 (예: 1000개 유지)
-	const int32 MaxKeep = 1000;
-	
-	if (SaveObj->ScoreHistory.Num() > MaxKeep)
-	{
-		const int32 ToRemove = SaveObj->ScoreHistory.Num() - MaxKeep;
-		SaveObj->ScoreHistory.RemoveAt(0, ToRemove, /*bAllowShrinking=*/false);
-	}
 
 	UGameplayStatics::SaveGameToSlot(SaveObj, GameSave::BoothSessionSlot, 0);
 }
