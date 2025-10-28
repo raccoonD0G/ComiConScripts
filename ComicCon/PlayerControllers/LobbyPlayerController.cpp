@@ -53,6 +53,11 @@ void ALobbyPlayerController::OnThreePressed()
     OpenSetting();
 }
 
+void ALobbyPlayerController::OnFourPressed()
+{
+    // TODO: Add Direct Result Test Code
+}
+
 void ALobbyPlayerController::SetWindowed(int32 Width, int32 Height)
 {
     if (!GEngine) return;
