@@ -6,6 +6,7 @@
 #include "GameStates/BattleGameState.h"
 #include "TimerManager.h"
 #include "Engine/World.h"
+#include "GameModes/BattleGameMode.h"
 
 ABattleGameState::ABattleGameState()
 {
@@ -46,8 +47,8 @@ void ABattleGameState::HandleBattleTimerTick()
 		if (UWorld* World = GetWorld())
 		{
 			World->GetTimerManager().ClearTimer(BattleTimerHandle);
-			// UI/사운드가 종료 이벤트에 반응할 수 있도록 먼저 브로드캐스트
 			OnBattleTimerFinished.Broadcast();
+			SetCurrentState(EGamePlayState::AfterBattle);
 		}
 	}
 }
@@ -69,6 +70,11 @@ void ABattleGameState::SetCurrentState(EGamePlayState NewState)
 	case EGamePlayState::OnBattle:
 		StartBattleTimer();
 		OnBattleStateEntered.Broadcast();
+		break;
+
+	case EGamePlayState::AfterBattle:
+		ABattleGameMode* BattleGameMode = Cast<ABattleGameMode>(GetWorld()->GetAuthGameMode());
+		BattleGameMode->EndMatch();
 		break;
 	}
 

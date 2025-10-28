@@ -25,16 +25,11 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
-        FTimerHandle InitRetryTimer;
-        FTimerHandle ResultLevelTimerHandle;
-        uint8 bBlockIncomingDamage : 1 = false;
+    FTimerHandle InitRetryTimer;
+    FTimerHandle ResultLevelTimerHandle;
 
-        UFUNCTION()
-        void Init();
-
-public:
-        UFUNCTION(BlueprintPure, Category = "Battle")
-        FORCEINLINE bool ShouldBlockDamage() const { return bBlockIncomingDamage; }
+    UFUNCTION()
+    void Init();
 
 // Score Section
 private:

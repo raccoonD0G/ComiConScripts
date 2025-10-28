@@ -50,7 +50,6 @@ public:
 	UFUNCTION(BlueprintPure, Category = "State")
 	FORCEINLINE EGamePlayState GetCurrentState() const { return CurrentState; }
 
-private:
 	void SetCurrentState(EGamePlayState NewState);
 
 public:

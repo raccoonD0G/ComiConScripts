@@ -113,7 +113,7 @@ void AAmuletAttack::SpawnOrUpdateFX(const FVector& Center, const FRotator& Rotat
     }
 
     // 기존 FX 있다면 제거
-    if (SpawnedFX && !SpawnedFX->IsPendingKill())
+    if (IsValid(SpawnedFX))
     {
         SpawnedFX->DestroyComponent();
         SpawnedFX = nullptr;

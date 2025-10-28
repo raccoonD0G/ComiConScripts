@@ -30,7 +30,7 @@ void ABattleGameMode::BeginPlay()
 
     RecordBattleEntry();
     StartMatch();
-        Init();
+    Init();
 }
 
 void ABattleGameMode::Init()
@@ -47,8 +47,6 @@ void ABattleGameMode::Init()
 
 void ABattleGameMode::StartMatch()
 {
-    bBlockIncomingDamage = false;
-
     if (UGameInstance* GI = GetGameInstance())
     {
         if (auto* Rec = GI->GetSubsystem<URecordingSubsystem>())
@@ -60,8 +58,6 @@ void ABattleGameMode::StartMatch()
 
 void ABattleGameMode::EndMatch()
 {
-    bBlockIncomingDamage = true;
-
     SaveScore();
 
     FString VideoPath;
@@ -170,41 +166,6 @@ void ABattleGameMode::EndMatch()
         {
             Rec->StopRecording();
             VideoPath = Rec->GetLastOutputPath();
-
-            //if (!VideoPath.IsEmpty() && bShowVideoQR)
-            //{
-            //    TWeakObjectPtr<UGameInstance> WeakGI = GI;
-            //    TWeakObjectPtr<URecordingSubsystem> WeakRec = Rec;
-
-            //    // 권장: 서브시스템의 함수를 사용 (수명 안전)
-            //    QR::UploadFileToServer(VideoPath, TEXT("URL"),
-            //        [WeakGI, WeakRec](bool bOk, FString QrUrl)
-            //        {
-            //            if (!bOk || QrUrl.IsEmpty() || !WeakRec.IsValid()) return;
-            //            
-            //            QR::FetchQrTexture(QrUrl, [WeakGI](bool bOk2, UTexture2D* QrTex)
-            //                {
-            //                    if (!bOk2 || !QrTex || !WeakGI.IsValid()) return;
-
-            //                    // 게임 스레드에서 UI 접근
-            //                    AsyncTask(ENamedThreads::GameThread, [WeakGI, QrTex]()
-            //                        {
-            //                            if (!WeakGI.IsValid()) return;
-            //                            if (UWorld* World = WeakGI->GetWorld())
-            //                            {
-            //                                if (APlayerController* PC = UGameplayStatics::GetPlayerController(World, 0))
-            //                                {
-            //                                    if (AResultHUD* ResultHUD = PC->GetHUD<AResultHUD>())
-            //                                    {
-            //                                        ResultHUD->SetQrTexture(QrTex);
-            //                                    }
-            //                                }
-            //                            }
-            //                        });
-            //                });
-            //        }
-            //    );
-            //}
         }
     }
 }
@@ -258,13 +219,6 @@ void ABattleGameMode::RecordBattleEntry()
     const FDateTime Now = FDateTime::Now();
     const FString Timestamp = Now.ToString(TEXT("%Y-%m-%d %H:%M"));
     SaveObj->BattleTimestamps.Add(Timestamp);
-
-    const int32 MaxEntries = 1000000;
-    if (SaveObj->BattleTimestamps.Num() > MaxEntries)
-    {
-        const int32 Excess = SaveObj->BattleTimestamps.Num() - MaxEntries;
-        SaveObj->BattleTimestamps.RemoveAt(0, Excess, /*bAllowShrinking=*/false);
-    }
 
     UGameplayStatics::SaveGameToSlot(SaveObj, GameSave::BoothSessionSlot, 0);
 }

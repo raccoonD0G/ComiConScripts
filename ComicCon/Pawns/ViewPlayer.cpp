@@ -13,7 +13,7 @@
 #include "Sound/SoundBase.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
-#include "GameModes/BattleGameMode.h"
+#include "GameStates/BattleGameState.h"
 
 AViewPlayer::AViewPlayer()
 {
@@ -116,9 +116,9 @@ void AViewPlayer::Tick(float DeltaSeconds)
 
 void AViewPlayer::GetAttacked(int32 InAttackPower)
 {
-    ABattleGameMode* BattleGameMode = Cast<ABattleGameMode>(GetWorld()->GetAuthGameMode());
+    ABattleGameState* BattleGameState = Cast<ABattleGameState>(GetWorld()->GetGameState<ABattleGameState>());
 
-    if (BattleGameMode && BattleGameMode->ShouldBlockDamage())
+    if (BattleGameState->GetCurrentState() != EGamePlayState::OnBattle)
     {
         return;
     }
@@ -135,10 +135,7 @@ void AViewPlayer::GetAttacked(int32 InAttackPower)
     
     if (CurrentHealth == 0)
     {
-        if (BattleGameMode)
-        {
-            BattleGameMode->EndMatch();
-        }
+		BattleGameState->SetCurrentState(EGamePlayState::AfterBattle);
     }
 }
 

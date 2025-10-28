@@ -201,7 +201,7 @@ void AEnemySpawner::SpawnOnce()
 		NewEnemy->FinishSpawning(SpawnXform);
 
 		// FinishSpawning 이후 실제로 살아있는지 확인 후 등록
-		if (IsValid(NewEnemy) && !NewEnemy->IsPendingKill())
+		if (IsValid(NewEnemy))
 		{
 			RegisterAlive(NewEnemy);
 		}

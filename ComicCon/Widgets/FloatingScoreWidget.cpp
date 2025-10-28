@@ -27,7 +27,7 @@ void UFloatingScoreWidget::UpdateOpacity_Implementation(float InOpacity01)
 {
 	if (ScoreImage)
 	{
-		FLinearColor C = ScoreImage->ColorAndOpacity;
+		FLinearColor C = ScoreImage->GetColorAndOpacity();
 		C.A = FMath::Clamp(InOpacity01, 0.f, 1.f);
 		ScoreImage->SetColorAndOpacity(C);
 	}
