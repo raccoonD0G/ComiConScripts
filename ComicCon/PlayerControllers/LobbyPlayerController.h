@@ -19,19 +19,19 @@ protected:
 
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	class UInputAction* IA_Enter = nullptr;
+	class UInputAction* IA_LobbyEnter = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	class UInputAction* IA_One = nullptr;
+	class UInputAction* IA_LobbyOne = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	class UInputAction* IA_Two = nullptr;
+	class UInputAction* IA_LobbyTwo = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	class UInputAction* IA_Three = nullptr;
+	class UInputAction* IA_LobbyThree = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	class UInputMappingContext* IMC_LobbyHUD = nullptr;
+	class UInputMappingContext* IMC_Lobby = nullptr;
 
 private:
 	void OnEnterPressed();

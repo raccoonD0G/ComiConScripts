@@ -19,16 +19,16 @@ void ALobbyPlayerController::BeginPlay()
     {
         if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LP))
         {
-            Subsystem->AddMappingContext(IMC_LobbyHUD, /*Priority*/ 0);
+            Subsystem->AddMappingContext(IMC_Lobby, /*Priority*/ 0);
         }
     }
 
     if (UEnhancedInputComponent* EIC = Cast<UEnhancedInputComponent>(InputComponent))
     {
-        EIC->BindAction(IA_Enter, ETriggerEvent::Started, this, &ALobbyPlayerController::OnEnterPressed);
-        EIC->BindAction(IA_One, ETriggerEvent::Started, this, &ALobbyPlayerController::OnOnePressed);
-        EIC->BindAction(IA_Two, ETriggerEvent::Started, this, &ALobbyPlayerController::OnTwoPressed);
-        EIC->BindAction(IA_Three, ETriggerEvent::Started, this, &ALobbyPlayerController::OnThreePressed);
+        EIC->BindAction(IA_LobbyEnter, ETriggerEvent::Started, this, &ALobbyPlayerController::OnEnterPressed);
+        EIC->BindAction(IA_LobbyOne, ETriggerEvent::Started, this, &ALobbyPlayerController::OnOnePressed);
+        EIC->BindAction(IA_LobbyTwo, ETriggerEvent::Started, this, &ALobbyPlayerController::OnTwoPressed);
+        EIC->BindAction(IA_LobbyThree, ETriggerEvent::Started, this, &ALobbyPlayerController::OnThreePressed);
     }
 }
 

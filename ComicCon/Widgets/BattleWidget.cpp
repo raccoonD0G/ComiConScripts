@@ -16,6 +16,11 @@ void UBattleWidget::NativeConstruct()
     ABattleGameState* BattleGameState = GetWorld()->GetGameState<ABattleGameState>();
     if (BattleGameState)
     {
+        BattleGameState->OnBeforeBattleStateEntered.AddDynamic(this, &UBattleWidget::PlayStartAnimation);
+        if (BattleGameState->GetCurrentState() == EGamePlayState::BeforeBattle)
+        {
+            PlayStartAnimation();
+		}
         BattleGameState->OnScoreChanged.AddDynamic(this, &UBattleWidget::SetScoreText);
         BattleGameState->OnBattleTimerSec.AddDynamic(this, &UBattleWidget::SetTimerText);
     }
@@ -86,5 +91,20 @@ void UBattleWidget::SetTimerText(int32 InSecond)
     if (TimerText)
     {
         TimerText->SetText(FText::AsNumber(InSecond));
+    }
+}
+
+void UBattleWidget::PlayStartAnimation()
+{
+    if (StartAnimation)
+    {
+        UUMGSequencePlayer* Player = PlayAnimation(
+            StartAnimation,         // InAnimation
+            0.0f,                   // StartAtTime
+            1,                      // NumLoopsToPlay (0 = 무한)
+            EUMGSequencePlayMode::Forward, // PlayMode
+            1.0f,                   // PlaybackSpeed
+            /*bRestoreState=*/false // 끝나면 원상복구 여부
+        );
     }
 }

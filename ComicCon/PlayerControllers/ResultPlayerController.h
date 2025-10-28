@@ -14,4 +14,16 @@ class COMICCON_API AResultPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 	
+protected:
+	virtual void BeginPlay() override;
+
+private:
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	class UInputAction* IA_ResultEnter = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	class UInputMappingContext* IMC_Result = nullptr;
+
+private:
+	void OnEnterPressed();
 };

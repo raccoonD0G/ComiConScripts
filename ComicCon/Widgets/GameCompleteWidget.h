@@ -25,9 +25,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Impact")
 	bool IsImpactPlaying() const { return bImpactPlaying; }
 
-	UFUNCTION(BlueprintImplementableEvent)
-	void StartSound();
-	
 protected:
 	// UUserWidget 수명주기
 	virtual void NativeConstruct() override;
@@ -81,4 +78,12 @@ private:
 	static float SmoothStep(float A, float B, float X);
 	static float EaseOutBack(float T, float Overshoot = 1.70158f);
 	void ApplyTransform(float Scale, float Opacity);
+
+// Sound Section
+private:
+	UPROPERTY(EditDefaultsOnly, Category = "Audio")
+	TObjectPtr<USoundBase> StartSoundAsset = nullptr;
+
+	UFUNCTION()
+	void StartSound();
 };

@@ -1,6 +1,8 @@
 ﻿#include "Widgets/GameCompleteWidget.h"
 #include "Components/Image.h"
 #include "Slate/WidgetTransform.h"
+#include "Kismet/GameplayStatics.h"
+
 
 // GameCompleteWidget.cpp 변경점
 void UGameCompleteWidget::NativeConstruct()
@@ -126,4 +128,24 @@ float UGameCompleteWidget::EaseOutBack(float T, float Overshoot)
     const float s = Overshoot;   // 기본 1.70158, 값이 클수록 튕김 큼
     const float t = T - 1.f;
     return (t * t * ((s + 1.f) * t + s) + 1.f);
+}
+
+void UGameCompleteWidget::StartSound()
+{
+    if (!StartSoundAsset)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("StartSoundAsset is null in %s"), *GetName());
+        return;
+    }
+
+    UGameplayStatics::PlaySound2D(
+        this,             // WorldContextObject
+        StartSoundAsset,  // Sound
+        1.0f,             // VolumeMultiplier
+        1.0f,             // PitchMultiplier
+        0.0f,             // StartTime
+        nullptr,          // ConcurrencySettings
+        nullptr,          // OwningActor
+        true              // bIsUISound
+    );
 }

@@ -224,9 +224,9 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Chrom")
 	TSoftObjectPtr<UMaterialInterface> ViewColorParent = TSoftObjectPtr<UMaterialInterface>(FSoftObjectPath(TEXT("/Game/Assets/Widget/Chrom/M_ViewColor.M_ViewColor")));
 
-	/** BP OpenSource에 넘기던 MediaSource (/Game/Assets/Widget/intro/Into.Into) */
+	/** BP OpenSource에 넘기던 MediaSource */
 	UPROPERTY(EditDefaultsOnly, Category = "Intro")
-	TSoftObjectPtr<class UMediaSource> IntroSource = TSoftObjectPtr<class UMediaSource>(FSoftObjectPath(TEXT("/Game/Assets/Widget/intro/Into.Into")));
+	TSoftObjectPtr<class UMediaSource> IntroSource = TSoftObjectPtr<class UMediaSource>(FSoftObjectPath(TEXT("/Game/Assets/Widget/Media/FMS_Intro.FMS_Intro")));
 
 	/** 분기 A: MID 생성 + 브러시 적용 */
 	void SetupChromViewColor();

@@ -11,6 +11,7 @@ enum class EGamePlayState : uint8
 {
 	BeforeBattle,
 	OnBattle,
+	AfterBattle
 };
 
 // ----- State Enter Delegates -----

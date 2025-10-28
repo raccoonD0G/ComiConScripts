@@ -64,4 +64,19 @@ private:
 
 	UPROPERTY()
 	URankingRowWidget* ChangeRow;
+
+// Background Section
+private:
+	/** BP에서 설정해두는 MediaPlayer (WBP 변수 Outro와 매칭) */
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<class UMediaPlayer> Outro = nullptr;
+
+	/** 열어줄 MediaSource (고정 자산 경로를 기본값으로 넣어둠) */
+	UPROPERTY(EditAnywhere)
+	TSoftObjectPtr<class UMediaSource> OutroSource = TSoftObjectPtr<UMediaSource>(FSoftObjectPath(TEXT("/Game/Assets/Widget/Media/FMS_Outro.FMS_Outro")));
+
+	FTimerHandle OutroOpenTimerHandle;
+
+	UFUNCTION()
+	void OpenOutroAfterDelay();
 };

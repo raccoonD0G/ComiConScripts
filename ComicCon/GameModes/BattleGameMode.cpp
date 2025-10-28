@@ -168,42 +168,40 @@ void ABattleGameMode::EndMatch()
             Rec->StopRecording();
             VideoPath = Rec->GetLastOutputPath();
 
-            if (!VideoPath.IsEmpty() && bShowVideoQR)
-            {
-                TWeakObjectPtr<UGameInstance> WeakGI = GI;
-                TWeakObjectPtr<URecordingSubsystem> WeakRec = Rec;
+            //if (!VideoPath.IsEmpty() && bShowVideoQR)
+            //{
+            //    TWeakObjectPtr<UGameInstance> WeakGI = GI;
+            //    TWeakObjectPtr<URecordingSubsystem> WeakRec = Rec;
 
-                // 권장: 서브시스템의 함수를 사용 (수명 안전)
-                QR::UploadFileToServer(
-                    VideoPath,
-                    TEXT("http://ec2-54-180-121-4.ap-northeast-2.compute.amazonaws.com:3000"),
-                    [WeakGI, WeakRec](bool bOk, FString QrUrl)
-                    {
-                        if (!bOk || QrUrl.IsEmpty() || !WeakRec.IsValid()) return;
-                        
-                        QR::FetchQrTexture(QrUrl, [WeakGI](bool bOk2, UTexture2D* QrTex)
-                            {
-                                if (!bOk2 || !QrTex || !WeakGI.IsValid()) return;
+            //    // 권장: 서브시스템의 함수를 사용 (수명 안전)
+            //    QR::UploadFileToServer(VideoPath, TEXT("URL"),
+            //        [WeakGI, WeakRec](bool bOk, FString QrUrl)
+            //        {
+            //            if (!bOk || QrUrl.IsEmpty() || !WeakRec.IsValid()) return;
+            //            
+            //            QR::FetchQrTexture(QrUrl, [WeakGI](bool bOk2, UTexture2D* QrTex)
+            //                {
+            //                    if (!bOk2 || !QrTex || !WeakGI.IsValid()) return;
 
-                                // 게임 스레드에서 UI 접근
-                                AsyncTask(ENamedThreads::GameThread, [WeakGI, QrTex]()
-                                    {
-                                        if (!WeakGI.IsValid()) return;
-                                        if (UWorld* World = WeakGI->GetWorld())
-                                        {
-                                            if (APlayerController* PC = UGameplayStatics::GetPlayerController(World, 0))
-                                            {
-                                                if (AResultHUD* ResultHUD = PC->GetHUD<AResultHUD>())
-                                                {
-                                                    ResultHUD->SetQrTexture(QrTex);
-                                                }
-                                            }
-                                        }
-                                    });
-                            });
-                    }
-                );
-            }
+            //                    // 게임 스레드에서 UI 접근
+            //                    AsyncTask(ENamedThreads::GameThread, [WeakGI, QrTex]()
+            //                        {
+            //                            if (!WeakGI.IsValid()) return;
+            //                            if (UWorld* World = WeakGI->GetWorld())
+            //                            {
+            //                                if (APlayerController* PC = UGameplayStatics::GetPlayerController(World, 0))
+            //                                {
+            //                                    if (AResultHUD* ResultHUD = PC->GetHUD<AResultHUD>())
+            //                                    {
+            //                                        ResultHUD->SetQrTexture(QrTex);
+            //                                    }
+            //                                }
+            //                            }
+            //                        });
+            //                });
+            //        }
+            //    );
+            //}
         }
     }
 }

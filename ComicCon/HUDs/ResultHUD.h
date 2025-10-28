@@ -3,18 +3,17 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/HUD.h"
+#include "HUDs/LevelHUD.h"
 #include "ResultHUD.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class COMICCON_API AResultHUD : public AHUD
+class COMICCON_API AResultHUD : public ALevelHUD
 {
 	GENERATED_BODY()
 	
-public:
-	UFUNCTION(BlueprintImplementableEvent)
-	void SetQrTexture(UTexture2D* Texture);
+protected:
+	virtual void BeginPlay() override;
 };

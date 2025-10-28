@@ -8,6 +8,10 @@
 #include "RankingRowWidget.h"
 #include "Components/TextBlock.h"
 #include "Components/VerticalBoxSlot.h"
+#include "MediaPlayer.h"
+#include "MediaSource.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
 
 void UResultWidget::NativeConstruct()
 {
@@ -153,4 +157,24 @@ void UResultWidget::ListBoxCheck(int32 Check)
 	ChangeRow = Cast<URankingRowWidget>(ListBox->GetChildAt(Check));
 
 	ChangeRow->ChangeWidget(PendingScores[Check].Score, PendingScores[Check].HunterCount);
+}
+
+void UResultWidget::OpenOutroAfterDelay()
+{
+	if (!Outro)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UResultWidget::OpenOutroAfterDelay: Outro MediaPlayer is null"));
+		return;
+	}
+
+	// 에셋이 이미 로드되어 있지 않다면 동기 로드
+	UMediaSource* Source = OutroSource.LoadSynchronous();
+	if (!Source)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UResultWidget::OpenOutroAfterDelay: OutroSource is null or failed to load"));
+		return;
+	}
+
+	const bool bOpened = Outro->OpenSource(Source);
+	UE_LOG(LogTemp, Log, TEXT("UResultWidget: Outro->OpenSource(%s) -> %s"), *Source->GetName(), bOpened ? TEXT("Success") : TEXT("Fail"));
 }

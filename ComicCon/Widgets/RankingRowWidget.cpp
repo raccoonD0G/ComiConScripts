@@ -4,6 +4,7 @@
 #include "Widgets/RankingRowWidget.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
+#include "Kismet/GameplayStatics.h"
 
 void URankingRowWidget::NativeConstruct()
 {
@@ -187,4 +188,24 @@ void URankingRowWidget::ChangeWidget(int32 score, int32 hunterNum)
             false    
         );
     }
+}
+
+void URankingRowWidget::PlayImpactSound()
+{
+    if (!ImpactSoundAsset)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ImpactSoundAsset is null in %s"), *GetName());
+        return;
+    }
+
+    UGameplayStatics::PlaySound2D(
+        this,             // WorldContextObject
+        ImpactSoundAsset,  // Sound
+        1.0f,             // VolumeMultiplier
+        1.0f,             // PitchMultiplier
+        0.0f,             // StartTime
+        nullptr,          // ConcurrencySettings
+        nullptr,          // OwningActor
+        true              // bIsUISound
+    );
 }
