@@ -67,6 +67,15 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	USlider* HueShiftSlider;
 
+	UPROPERTY(meta = (BindWidget))
+	class UWidgetSwitcher* WidgetSwitcher;
+
+	UPROPERTY(meta = (BindWidget))
+	class UButton* SaveButton;
+
+	UPROPERTY(meta = (BindWidget))
+	class UButton* ResetButton;
+
 	// UI용 머테리얼 (Domain=User Interface)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="ColorPicker")
 	UMaterialInterface* UiMaterial = nullptr;
@@ -106,8 +115,7 @@ public:
 	UPROPERTY()
 	float SaveHueShift = 0.0f;
 
-	UFUNCTION(BlueprintImplementableEvent)
-	void test(FLinearColor color);
+	void UpdateViewColor(FLinearColor NewColor);
 
 	UFUNCTION()
 	void OnValueCommittedLumaMask(const FText& Text, ETextCommit::Type CommitMethod);
@@ -184,14 +192,50 @@ public:
 	UFUNCTION()
 	void ChangeHueShift(float f);
 
-	UFUNCTION(BlueprintCallable)
 	void SaveParam();
 
-	UFUNCTION(BlueprintCallable)
 	void ResetParam();
 
-	UFUNCTION(BlueprintImplementableEvent)
+	UFUNCTION()
+	void OnSaveButtonClicked();
+
+	UFUNCTION(BlueprintCallable)
+	void OpenSetting();
+
+	UFUNCTION()
+	void OnResetButtonClicked();
+
 	void ResetMap();
+
+private:
+	/** BP 변수: MediaPlayer Intro */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Intro", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UMediaPlayer> Intro = nullptr;
+
+	/** BP 위젯: ChromColorImage */
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UImage> ChromColorImage = nullptr;
+
+	/** BP 변수: MID_ViewColor */
+	UPROPERTY(Transient)
+	TObjectPtr<UMaterialInstanceDynamic> MID_ViewColor = nullptr;
+
+	/** BP에서 CreateDynamicMaterialInstance Parent로 쓰던 머티리얼 (M_ViewColor) */
+	UPROPERTY(EditDefaultsOnly, Category = "Chrom")
+	TSoftObjectPtr<UMaterialInterface> ViewColorParent = TSoftObjectPtr<UMaterialInterface>(FSoftObjectPath(TEXT("/Game/Assets/Widget/Chrom/M_ViewColor.M_ViewColor")));
+
+	/** BP OpenSource에 넘기던 MediaSource (/Game/Assets/Widget/intro/Into.Into) */
+	UPROPERTY(EditDefaultsOnly, Category = "Intro")
+	TSoftObjectPtr<class UMediaSource> IntroSource = TSoftObjectPtr<class UMediaSource>(FSoftObjectPath(TEXT("/Game/Assets/Widget/intro/Into.Into")));
+
+	/** 분기 A: MID 생성 + 브러시 적용 */
+	void SetupChromViewColor();
+
+	/** 분기 B: 0.1초 후 인트로 열기 */
+	void OpenIntroAfterDelay();
+	void OpenIntroNow();
+
+	FTimerHandle IntroDelayHandle;
 	
 protected:
 	virtual void NativeConstruct() override;
@@ -199,12 +243,6 @@ protected:
 	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 
 private:
-	UFUNCTION(BlueprintCallable)
-	void SetWindowed(int32 Width, int32 Height);
-
-	UFUNCTION(BlueprintCallable)
-	void SetFullscreen(bool bTrueFullscreen);
-
 	UPROPERTY()
 	UMaterialInstanceDynamic* UiMID = nullptr;
 

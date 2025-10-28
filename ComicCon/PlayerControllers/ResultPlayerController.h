@@ -4,13 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
-#include "WidgetOnlyPlayerController.generated.h"
+#include "ResultPlayerController.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class COMICCON_API AWidgetOnlyPlayerController : public APlayerController
+class COMICCON_API AResultPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 	

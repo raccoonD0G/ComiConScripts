@@ -4,10 +4,31 @@
 #include "Widgets/LobbyWidget.h"
 #include "Components/EditableTextBox.h"
 #include "Components/Image.h"
-#include "GameFramework/GameUserSettings.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetRenderingLibrary.h"
 #include "SaveGames/ScoreSaveGame.h"
+#include "Components/WidgetSwitcher.h"
+#include "Components/Button.h"
+#include "Materials/MaterialInstanceDynamic.h"
+#include "Materials/MaterialInterface.h"
+#include "MediaPlayer.h"
+#include "MediaSource.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
+
+void ULobbyWidget::UpdateViewColor(FLinearColor NewColor)
+{
+    if (!MID_ViewColor)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("UpdateViewColor called but MID_ViewColor is null on %s"), *GetName());
+        return;
+    }
+
+    // 블루프린트의 SetVectorParameterValue("color", Value) 대응
+    MID_ViewColor->SetVectorParameterValue(TEXT("color"), NewColor);
+
+    UE_LOG(LogTemp, Verbose, TEXT("Updated ViewColor to R=%.2f G=%.2f B=%.2f A=%.2f"), NewColor.R, NewColor.G, NewColor.B, NewColor.A);
+}
 
 void ULobbyWidget::OnValueCommittedLumaMask(const FText& Text, ETextCommit::Type CommitMethod)
 {
@@ -262,9 +283,106 @@ void ULobbyWidget::ResetParam()
     ResetMap();
 }
 
+void ULobbyWidget::OnSaveButtonClicked()
+{
+    SaveParam();
+
+    if (ensureMsgf(WidgetSwitcher != nullptr, TEXT("WidgetSwitcher is null on %s"), *GetName()))
+    {
+        const int32 Index = 0;
+        WidgetSwitcher->SetActiveWidgetIndex(Index);
+    }
+}
+
+void ULobbyWidget::OpenSetting()
+{
+    if (ensureMsgf(WidgetSwitcher != nullptr, TEXT("WidgetSwitcher is null on %s"), *GetName()))
+    {
+        const int32 Index = 1;
+        WidgetSwitcher->SetActiveWidgetIndex(Index);
+    }
+}
+
+void ULobbyWidget::OnResetButtonClicked()
+{
+    ResetParam();
+}
+
+void ULobbyWidget::ResetMap()
+{
+    UGameplayStatics::OpenLevel(this, FName(TEXT("LobbyMap")));
+}
+
+void ULobbyWidget::SetupChromViewColor()
+{
+    UMaterialInterface* Parent = ViewColorParent.LoadSynchronous();
+    if (!Parent)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ULobbyWidget: ViewColorParent not found."));
+        return;
+    }
+
+    MID_ViewColor = UMaterialInstanceDynamic::Create(Parent, this);
+    if (!MID_ViewColor)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ULobbyWidget: Failed to create MID_ViewColor."));
+        return;
+    }
+
+    if (ChromColorImage)
+    {
+        ChromColorImage->SetBrushFromMaterial(MID_ViewColor);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ULobbyWidget: ChromColorImage is null."));
+    }
+}
+
+void ULobbyWidget::OpenIntroAfterDelay()
+{
+    if (!GetWorld())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ULobbyWidget: No World for timer."));
+        return;
+    }
+
+    // BP KismetSystemLibrary::Delay(0.1) 대응: 타이머로 대체
+    GetWorld()->GetTimerManager().SetTimer(
+        IntroDelayHandle, this, &ULobbyWidget::OpenIntroNow, 0.1f, /*bLoop*/false);
+}
+
+void ULobbyWidget::OpenIntroNow()
+{
+    if (!Intro)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ULobbyWidget: Intro(MediaPlayer) is null."));
+        return;
+    }
+
+    UMediaSource* Source = IntroSource.LoadSynchronous();
+    if (!Source)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ULobbyWidget: IntroSource not found."));
+        return;
+    }
+
+    const bool bWillOpen = Intro->OpenSource(Source);
+    if (!bWillOpen)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ULobbyWidget: MediaPlayer->OpenSource() returned false."));
+    }
+}
+
 void ULobbyWidget::NativeConstruct()
 {
     Super::NativeConstruct();
+
+    // Execution Sequence then_0: CreateDynamicMaterialInstance -> SetBrushFromMaterial
+    SetupChromViewColor();
+
+    // Execution Sequence then_1: Delay(0.1) -> MediaPlayer.OpenSource(IntroSource)
+    OpenIntroAfterDelay();
 
     if (VideoImage && UiMaterial)
     {
@@ -310,7 +428,17 @@ void ULobbyWidget::NativeConstruct()
     ChangeContrast(SaveContrast);
     ChangeSaturation(SaveSaturation);
     ChangeHueShift(SaveHueShift);
-    test(PickedColor);
+    UpdateViewColor(PickedColor);
+
+    if (SaveButton)
+    {
+        SaveButton->OnClicked.AddDynamic(this, &ULobbyWidget::OnSaveButtonClicked);
+    }
+
+    if (ResetButton)
+    {
+        ResetButton->OnClicked.AddDynamic(this, &ULobbyWidget::OnResetButtonClicked);
+	}
 
     // 실시간 데이터 적용
     if (LumaMask)
@@ -331,19 +459,19 @@ void ULobbyWidget::NativeConstruct()
     }
     if (Brightness)
     {
-        Brightness->OnTextCommitted.AddDynamic(this, &ULobbyWidget::OnValueCommittedIntensityFloor);
+        Brightness->OnTextCommitted.AddDynamic(this, &ULobbyWidget::OnValueCommittedBrightness);
     }
     if (Contrast)
     {
-        Contrast->OnTextCommitted.AddDynamic(this, &ULobbyWidget::OnValueCommittedIntensityFloor);
+        Contrast->OnTextCommitted.AddDynamic(this, &ULobbyWidget::OnValueCommittedContrast);
     }
     if (Saturation)
     {
-        Saturation->OnTextCommitted.AddDynamic(this, &ULobbyWidget::OnValueCommittedIntensityFloor);
+        Saturation->OnTextCommitted.AddDynamic(this, &ULobbyWidget::OnValueCommittedSaturation);
     }
     if (HueShift)
     {
-        HueShift->OnTextCommitted.AddDynamic(this, &ULobbyWidget::OnValueCommittedIntensityFloor);
+        HueShift->OnTextCommitted.AddDynamic(this, &ULobbyWidget::OnValueCommittedHueShift);
     }
 
     if (LumaMaskSlider)
@@ -413,34 +541,11 @@ FReply ULobbyWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const 
     UE_LOG(LogTemp, Display, TEXT("PickedColor UV(%.3f, %.3f) -> Pixel(%d, %d) = %s"),
         UV.X, UV.Y, Px, Py, *PickedColor.ToString());
     
-    test(PickedColor);
+    UpdateViewColor(PickedColor);
     
     ChangeKeyColor();
 
     return FReply::Handled();
-}
-
-void ULobbyWidget::SetWindowed(int32 Width, int32 Height)
-{
-    if (!GEngine) return;
-    if (UGameUserSettings* GS = GEngine->GetGameUserSettings())
-    {
-        GS->SetFullscreenMode(EWindowMode::Windowed);
-        GS->SetScreenResolution(FIntPoint(Width, Height));
-        GS->ApplySettings(false);
-        GS->SaveSettings();
-    }
-}
-
-void ULobbyWidget::SetFullscreen(bool bTrueFullscreen)
-{
-    if (!GEngine) return;
-    if (UGameUserSettings* GS = GEngine->GetGameUserSettings())
-    {
-        GS->SetFullscreenMode(bTrueFullscreen ? EWindowMode::Fullscreen : EWindowMode::WindowedFullscreen);
-        GS->ApplySettings(false);
-        GS->SaveSettings();
-    }
 }
 
 bool ULobbyWidget::ComputeUVOnImage(const FPointerEvent& MouseEvent, FVector2D& OutUV) const

@@ -10,14 +10,14 @@
 #include "Kismet/GameplayStatics.h"
 #include "Async/Async.h"
 #include "SaveGames/ScoreSaveGame.h"
-#include <HUDs/BattleHUD.h>
+#include "HUDs/BattleHUD.h"
 #include "Misc/DateTime.h"
 
 #include "Blueprint/UserWidget.h"     // UUserWidget, CreateWidget
 #include "Components/PanelWidget.h"   // UPanelWidget
 #include "Components/ContentWidget.h" // UContentWidget
 #include "Components/CanvasPanelSlot.h" // UCanvasPanelSlot
-#include <Pawns/ViewPlayer.h>
+#include "Pawns/ViewPlayer.h"
 #include "Widgets/GameCompleteWidget.h"       // UGameCompleteWidget
 #include "Widgets/BattleWidget.h"
 
@@ -69,7 +69,7 @@ void ABattleGameMode::EndMatch()
     ABattleHUD* HUD = Cast<ABattleHUD>(PC->GetHUD());
     if (!HUD) return;
 
-    UBattleWidget* BW = HUD->GetLevelWidget();
+    UBattleWidget* BW = Cast<UBattleWidget>(HUD->GetLevelWidget());
     if (!BW) return;
 
     // 플레이어 생사 판별
