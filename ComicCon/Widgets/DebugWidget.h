@@ -12,13 +12,20 @@
 UCLASS()
 class COMICCON_API UDebugWidget : public UUserWidget
 {
-	GENERATED_BODY()
-	
+        GENERATED_BODY()
+
+protected:
+        virtual void NativeConstruct() override;
 
 private:
-	UPROPERTY(meta = (BindWidget))
-	class UEditableTextBox* ScoreInputTextBox = nullptr;
+        UPROPERTY(meta = (BindWidget))
+        class UEditableTextBox* ScoreInputTextBox = nullptr;
 
-	UPROPERTY(meta = (BindWidget))
-	class UButton* TestResultButton = nullptr;
+        UPROPERTY(meta = (BindWidget))
+        class UButton* TestResultButton = nullptr;
+
+        UFUNCTION()
+        void HandleTestResultButtonClicked();
+
+        int32 GetDesiredScore() const;
 };
