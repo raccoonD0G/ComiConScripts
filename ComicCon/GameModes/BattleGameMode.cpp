@@ -35,11 +35,9 @@ void ABattleGameMode::BeginPlay()
 
 void ABattleGameMode::Init()
 {
-    if (ABattleGameState* BattleGameState = GetGameState<ABattleGameState>())
-    {
-        BattleGameState->OnBattleTimerFinished.AddDynamic(this, &ABattleGameMode::EndMatch);
-    }
-    else
+    ABattleGameState* BattleGameState = GetGameState<ABattleGameState>();
+
+    if (!BattleGameState)
     {
         GetWorldTimerManager().SetTimer(InitRetryTimer, this, &ABattleGameMode::StartMatch, 0.1f, false);
     }

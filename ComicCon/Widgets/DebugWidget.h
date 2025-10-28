@@ -28,4 +28,6 @@ private:
         void HandleTestResultButtonClicked();
 
         int32 GetDesiredScore() const;
+
+        FDelegateHandle PostLoadHandle;
 };

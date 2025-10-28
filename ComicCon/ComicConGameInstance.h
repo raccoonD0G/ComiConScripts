@@ -15,7 +15,8 @@ class COMICCON_API UComicConGameInstance : public UGameInstance
     GENERATED_BODY()
 public:
     virtual void Init() override;
-    virtual void OnStart() override; // 첫 맵 로드 후 호출
+    virtual void OnStart() override;
+    virtual void Shutdown() override;
 
 private:
     void StartBGM();
@@ -25,4 +26,14 @@ private:
 
     UPROPERTY(EditDefaultsOnly)
     USoundBase* BGM = nullptr;
+
+// Debug Section
+public:
+    // 위젯에서 세팅
+    int32 PendingDesiredScore = INDEX_NONE;
+    bool bEndMatchOnPostLoad = false;
+
+private:
+    FDelegateHandle PostLoadHandle;
+    void HandlePostLoadMap(UWorld* NewWorld);
 };

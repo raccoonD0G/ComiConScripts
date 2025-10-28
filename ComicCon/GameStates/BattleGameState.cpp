@@ -74,7 +74,10 @@ void ABattleGameState::SetCurrentState(EGamePlayState NewState)
 
 	case EGamePlayState::AfterBattle:
 		ABattleGameMode* BattleGameMode = Cast<ABattleGameMode>(GetWorld()->GetAuthGameMode());
-		BattleGameMode->EndMatch();
+		if (BattleGameMode)
+		{
+			BattleGameMode->EndMatch();
+		}
 		break;
 	}
 
@@ -102,8 +105,7 @@ void ABattleGameState::StartBattleTimer()
 
 	if (UWorld* World = GetWorld())
 	{
-		World->GetTimerManager().SetTimer(
-			BattleTimerHandle, this, &ABattleGameState::HandleBattleTimerTick, 1.0f, true);
+		World->GetTimerManager().SetTimer(BattleTimerHandle, this, &ABattleGameState::HandleBattleTimerTick, 1.0f, true);
 	}
 
 	OnBattleTimerStarted.Broadcast();

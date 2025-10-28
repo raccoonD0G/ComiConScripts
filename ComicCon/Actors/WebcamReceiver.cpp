@@ -11,6 +11,7 @@
 #include "Materials/MaterialInstance.h"
 #include "Materials/MaterialInterface.h"
 #include "SaveGames/BoothSave.h"
+#include "SaveGames/GameSaveConstants.h"
 
 AWebcamReceiver::AWebcamReceiver()
 {
@@ -69,9 +70,9 @@ void AWebcamReceiver::BeginPlay()
 
     // 3) 세이브 로드
     UBoothSave* LoadedSave = nullptr;
-    if (UGameplayStatics::DoesSaveGameExist(TEXT("BattleSave"), 0))
+    if (UGameplayStatics::DoesSaveGameExist(GameSave::BoothSessionSlot, 0))
     {
-        LoadedSave = Cast<UBoothSave>(UGameplayStatics::LoadGameFromSlot(TEXT("BattleSave"), 0));
+        LoadedSave = Cast<UBoothSave>(UGameplayStatics::LoadGameFromSlot(GameSave::BoothSessionSlot, 0));
     }
     if (!LoadedSave)
     {
